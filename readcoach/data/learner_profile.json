@@ -1,6 +1,6 @@
 {
   "name": "样例同学",
-  "target_exam": "TOEFL 90",
+  "target_exam": "CET-6",
   "level": "B1+",
   "goal": "六周内把外刊精读变成习惯，重点补学术词汇",
   "mistakes": [
@@ -39,7 +39,7 @@
     }
   ],
   "sessions": 2,
-  "updated_at": "2026-10-27 15:45:24",
+  "updated_at": "2026-10-27 16:42:28",
   "language": "en",
   "daily_dates": [],
   "daily_lang": "en"
