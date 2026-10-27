@@ -1,0 +1,9 @@
+Campus Carbon: Why Small Habits Are Not Enough
+
+When universities publish their annual sustainability reports, the numbers often look encouraging. A campus may announce that it has cut electricity consumption by twelve percent, installed solar panels on two dormitory roofs, and replaced thousands of old light bulbs. These are real achievements. Yet a closer look at the baseline reveals a less comfortable picture: total emissions have fallen far more slowly than the publicity suggests.
+
+The reason is structural rather than personal. A single student who switches off a light saves a trivial amount of power; the campus heating plant, by contrast, burns gas for six months a year. Efficiency improvements in one building are easily cancelled out by a new laboratory that runs twenty-four hours a day. Without a clear framework for measuring and allocating responsibility, cumulative savings disappear into the general budget.
+
+None of this means individual habits are pointless. They matter because they build the political consensus that makes larger measures viable. But a serious initiative needs three things: transparent data that any stakeholder can audit, a stable carbon price or subsidy that creates an incentive to invest in renewable infrastructure, and enforceable thresholds that restrain the cheapest and dirtiest options. Voluntary enthusiasm alone cannot substitute for legislation.
+
+The transition will be slow, and some of its costs are inevitable. The question worth asking is not whether students care about the environment, but whether the institution can quantify what it uses, publish what it finds, and let the results face public scrutiny.

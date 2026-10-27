@@ -1,0 +1,44 @@
+# 虚拟环境与缓存
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# 密钥：真值永不入库，只提交 .env.example
+.env
+.env.*
+!.env.example
+.streamlit/secrets.toml
+
+# Agent 运行时产出（演示前会清空，不入库）
+outputs/*
+!outputs/.gitkeep
+
+# 会话与日志
+data/session.json
+data/current_article.txt
+*.log
+logs/
+
+# 词库构建脚本下载的原始词表（可重新下载，不入库）
+scripts/cache/
+
+# 幻灯片截图预览（本机核验版式用）
+.preview/
+
+# 本机核验过程产物（headless 截图、中间 JSON/PDF、排版检查图）
+/_*.png
+/_*.jpg
+/_*.json
+/_*.pdf
+/_*.txt
+
+# 每日推送抓取缓存（可重新抓，快照见 data/articles）
+data/cache/
+
+# 编辑器
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

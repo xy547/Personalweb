@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>外刊精读教练 · 项目介绍</title>
+<style>
+  :root{
+    --bg:#f6f8fc; --card:#ffffff; --ink:#0f172a; --muted:#5b6b84;
+    --line:#dfe6f2; --accent:#2563eb; --accent-soft:#e8effd;
+    --teal:#0f9d8f; --teal-soft:#e3f6f3;
+    --warn:#d97706; --warn-soft:#fef3e2;
+    --danger:#dc2626; --danger-soft:#fdeaea;
+    --ok:#16a34a; --ok-soft:#e8f7ee;
+    --mono:Consolas,"Cascadia Mono","Courier New",monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:#eef2f9; color:var(--ink);
+    font-family:-apple-system,"Segoe UI","Microsoft YaHei","PingFang SC",sans-serif;
+    overflow:hidden; -webkit-font-smoothing:antialiased;
+  }
+  #stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+  .slide{
+    position:absolute; width:1280px; height:720px; background:var(--bg);
+    padding:56px 68px; display:none; flex-direction:column; overflow:hidden;
+    transform-origin:center center;
+  }
+  .slide.active{display:flex}
+  /* 兜底：JS 未跑起来时也先显示第一页，避免打开是一片空白 */
+  #stage:not(.ready) .slide:first-of-type{display:flex}
+  /* 顶部细线 + 页码 */
+  .slide::after{
+    content:attr(data-page); position:absolute; right:34px; bottom:22px;
+    font-size:13px; color:#9aa8bf; letter-spacing:.08em;
+  }
+  h1{font-size:62px;line-height:1.15;letter-spacing:-.02em;font-weight:800}
+  h2{font-size:38px;line-height:1.25;font-weight:750;letter-spacing:-.01em}
+  h3{font-size:21px;font-weight:700}
+  p,li{font-size:19px;line-height:1.62;color:#25324a}
+  .muted{color:var(--muted)}
+  .small{font-size:16px;line-height:1.6}
+  .tiny{font-size:14px;line-height:1.55}
+  .lead{font-size:22px;line-height:1.66;color:#33415c}
+  .kicker{
+    font-size:14px;font-weight:700;letter-spacing:.16em;color:var(--accent);
+    text-transform:uppercase;margin-bottom:14px;
+  }
+  .rule{width:64px;height:4px;background:var(--accent);border-radius:2px;margin:18px 0 26px}
+  .grid{display:grid;gap:18px}
+  .g2{grid-template-columns:1fr 1fr}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:22px 24px;
+  }
+  .card h3{margin-bottom:8px}
+  .card p{font-size:16.5px;line-height:1.6}
+  .pill{
+    display:inline-block;padding:4px 12px;border-radius:999px;font-size:13.5px;
+    font-weight:650;background:var(--accent-soft);color:#1d4ed8;margin:0 6px 6px 0;
+  }
+  .pill.teal{background:var(--teal-soft);color:#0b7a70}
+  .pill.warn{background:var(--warn-soft);color:#b45309}
+  .pill.danger{background:var(--danger-soft);color:#b91c1c}
+  .pill.ok{background:var(--ok-soft);color:#15803d}
+  .num{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:28px;height:28px;border-radius:8px;background:var(--accent);color:#fff;
+    font-size:15px;font-weight:700;margin-right:10px;flex:0 0 auto;
+  }
+  pre{
+    background:#0f172a;color:#e2e8f5;border-radius:12px;padding:18px 20px;
+    font-family:var(--mono);font-size:14.5px;line-height:1.68;overflow:hidden;
+    white-space:pre-wrap;
+  }
+  pre .c{color:#8fa3c4}
+  pre .k{color:#7dd3fc}
+  pre .s{color:#a7f3d0}
+  pre .e{color:#fca5a5}
+  pre.light{background:#0f172a}
+  code.inline{
+    font-family:var(--mono);font-size:.92em;background:#e9eef8;color:#1e3a8a;
+    padding:1px 6px;border-radius:5px;
+  }
+  .flow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .flow .box{
+    background:#fff;border:1px solid var(--line);border-radius:10px;
+    padding:12px 16px;font-size:15.5px;font-weight:600;
+  }
+  .flow .arrow{color:#9aa8bf;font-size:20px;font-weight:700}
+  table{border-collapse:collapse;width:100%}
+  th,td{text-align:left;padding:11px 12px;font-size:16px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-size:13.5px;letter-spacing:.06em;color:var(--muted);font-weight:700;text-transform:uppercase}
+  tr:last-child td{border-bottom:none}
+  .cover{
+    background:
+      radial-gradient(900px 460px at 88% -8%, #dbe7ff 0%, rgba(219,231,255,0) 62%),
+      radial-gradient(760px 420px at 6% 108%, #d9f5f0 0%, rgba(217,245,240,0) 60%),
+      var(--bg);
+    justify-content:center;
+  }
+  .cover h1{font-size:74px}
+  .cover .sub{font-size:24px;color:#3b4b66;margin-top:18px;line-height:1.6}
+  .meta{display:flex;gap:34px;margin-top:40px;font-size:16px;color:var(--muted)}
+  .meta b{display:block;color:var(--ink);font-size:17px;margin-top:4px;font-weight:700}
+  .art{position:absolute;right:74px;top:50%;transform:translateY(-50%);opacity:.95}
+  .row{display:flex;gap:14px;align-items:flex-start}
+  .timeline{display:flex;flex-direction:column;gap:7px}
+  .tl{
+    display:grid;grid-template-columns:112px 1fr;gap:14px;align-items:center;
+    background:#fff;border:1px solid var(--line);border-radius:9px;padding:9px 14px;
+    font-size:15px;
+  }
+  .tl .t{font-family:var(--mono);font-size:13px;color:var(--muted)}
+  .tl .n{font-family:var(--mono);font-size:14.5px;font-weight:700;color:#1e3a8a}
+  .tl.tool{background:#f4f8ff;border-color:#c9dcff}
+  .tl.out{background:var(--teal-soft);border-color:#b8e6df}
+  .tl .n.dim{color:#7b8aa5;font-weight:600}
+  .badge{
+    display:inline-block;font-size:12.5px;font-weight:700;padding:2px 9px;border-radius:6px;
+    background:var(--danger-soft);color:#b91c1c;margin-left:8px;vertical-align:middle;
+  }
+  .badge.ok{background:var(--ok-soft);color:#15803d}
+  .hl{background:linear-gradient(transparent 62%, #ffe9a8 62%);font-weight:650}
+  .stat{font-size:40px;font-weight:800;letter-spacing:-.02em;line-height:1.1}
+  .stat small{display:block;font-size:14.5px;font-weight:600;color:var(--muted);letter-spacing:0;margin-top:6px}
+  nav#hud{
+    position:fixed;left:0;right:0;bottom:0;height:0;pointer-events:none;
+  }
+  #hint{
+    position:fixed;right:18px;top:16px;font-size:12.5px;color:#93a1b8;
+    letter-spacing:.02em;transition:opacity .4s;z-index:9;
+  }
+  #nav{
+    position:fixed;left:50%;transform:translateX(-50%);bottom:14px;
+    display:flex;align-items:center;gap:8px;z-index:9;opacity:.4;transition:opacity .3s;
+  }
+  #nav:hover{opacity:1}
+  #nav button{
+    width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:#fff;
+    color:#25324a;font-size:18px;line-height:1;cursor:pointer;
+    box-shadow:0 2px 6px rgba(15,23,42,.08);
+  }
+  #nav button:hover{background:var(--accent-soft);border-color:#c9dcff}
+  #nav span{font-size:12.5px;color:#93a1b8;font-variant-numeric:tabular-nums;min-width:46px;text-align:center}
+  @media print{
+    body{overflow:visible;background:#fff}
+    #stage{position:static;display:block}
+    .slide{display:flex!important;position:relative;page-break-after:always;transform:none!important;margin:0 auto}
+    #hint,#nav{display:none}
+  }
+</style>
+</head>
+<body>
+<div id="hint">← → 翻页　·　F 全屏　·　共 12 页</div>
+<div id="nav">
+  <button id="prev" type="button" aria-label="上一页">‹</button>
+  <button id="next" type="button" aria-label="下一页">›</button>
+</div>
+<div id="stage">
+
+<!-- 1 封面 -->
+<section class="slide cover" data-page="01 / 12">
+  <div class="kicker">开源 AI 技术实践 · 期末考查</div>
+  <h1>外刊精读教练</h1>
+  <div class="sub">把一篇英文原文，变成<b>词表 CSV</b> 和 <b>挖空练习页</b>——<br>中间那四十分钟，交给 Agent。</div>
+  <div class="meta">
+    <div>姓名<b>徐悦</b></div>
+    <div>学号<b>（待填）</b></div>
+    <div>路径<b>A · 技术栈完整的智能体应用</b></div>
+    <div>技术栈<b>LangGraph + 百炼 qwen-plus + Streamlit</b></div>
+  </div>
+  <div class="tiny" style="margin-top:auto;color:#9aa8bf;letter-spacing:.04em">
+    开源 AI 技术实践　·　杉达学院 2026–2027 学年第一学期　·　汇报 2026.10.27
+  </div>
+  <svg class="art" width="250" height="330" viewBox="0 0 250 330" fill="none" aria-hidden="true">
+    <!-- 上面：一篇外刊原文，中间两处被挖空 -->
+    <rect x="30" y="14" width="190" height="178" rx="12" fill="#fff" stroke="#c9d8f0" stroke-width="1.6"/>
+    <rect x="48" y="34" width="86" height="9" rx="4.5" fill="#2563eb" opacity=".9"/>
+    <g fill="#cfdbee">
+      <rect x="48" y="60" width="154" height="7" rx="3.5"/>
+      <rect x="48" y="76" width="132" height="7" rx="3.5"/>
+      <rect x="48" y="92" width="146" height="7" rx="3.5"/>
+    </g>
+    <rect x="48" y="110" width="54" height="9" rx="4.5" fill="#eaf1fd" stroke="#9dbcf0" stroke-width="1.4" stroke-dasharray="4 3"/>
+    <rect x="108" y="110" width="34" height="9" rx="4.5" fill="#eaf1fd" stroke="#9dbcf0" stroke-width="1.4" stroke-dasharray="4 3"/>
+    <g fill="#cfdbee">
+      <rect x="48" y="130" width="140" height="7" rx="3.5"/>
+      <rect x="48" y="146" width="108" height="7" rx="3.5"/>
+      <rect x="48" y="162" width="124" height="7" rx="3.5"/>
+    </g>
+    <!-- 箭头：原文 → 产出 -->
+    <path d="M125 194v16" stroke="#9dbcf0" stroke-width="2" stroke-linecap="round"/>
+    <path d="M118 206l7 7 7-7" stroke="#9dbcf0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- 下面：CSV 词表 + HTML 练习页 -->
+    <rect x="30" y="220" width="190" height="46" rx="10" fill="#fff" stroke="#c9d8f0" stroke-width="1.6"/>
+    <rect x="44" y="232" width="62" height="8" rx="4" fill="#0f9d8f" opacity=".75"/>
+    <rect x="44" y="248" width="148" height="6" rx="3" fill="#cfdbee"/>
+    <rect x="30" y="276" width="190" height="38" rx="10" fill="#f3fbf9" stroke="#b8e6df" stroke-width="1.6"/>
+    <rect x="44" y="288" width="92" height="8" rx="4" fill="#0f9d8f" opacity=".5"/>
+    <rect x="146" y="286" width="56" height="12" rx="6" fill="#0f9d8f" opacity=".85"/>
+  </svg>
+</section>
+
+<!-- 2 问题 -->
+<section class="slide" data-page="02 / 12">
+  <div class="kicker">问题与用户</div>
+  <h2>精读一篇文章，其实要做四件互不相干的事</h2>
+  <div class="rule"></div>
+  <div class="grid g2" style="grid-template-columns:1.05fr 1fr;gap:30px">
+    <div>
+      <p class="lead">用户就是我：备考 CET-6 的大学生，外刊读得慢，生词查完就忘。</p>
+      <div style="margin-top:22px" class="timeline">
+        <div class="tl"><span class="t">第 1 步</span><span>读完文章，圈出 20 个不认识的词</span></div>
+        <div class="tl"><span class="t">第 2 步</span><span>逐个查音标、词性、释义、例句 —— 20 次复制粘贴</span></div>
+        <div class="tl"><span class="t">第 3 步</span><span>按考纲筛出该背的，手动敲进背单词软件</span></div>
+        <div class="tl"><span class="t">第 4 步</span><span>原文挖空，做一张能打印的填空练习</span></div>
+      </div>
+      <p style="margin-top:18px" class="small muted">四件事散落在四个软件里，<b>一次约 40 分钟</b>。累的不是查词，是切换。</p>
+    </div>
+    <div class="card" style="background:#fff">
+      <h3 style="color:#1d4ed8">这个项目做的事</h3>
+      <p style="margin-top:10px;font-size:17px">把上面四步收进<b>一句话</b>：</p>
+      <p style="margin:14px 0;padding:14px 16px;background:var(--accent-soft);border-radius:10px;font-size:16.5px">
+        「帮我精读 demo 里那篇校园碳排的文章，挑出 8 个 CET-6 生词」
+      </p>
+      <p style="font-size:16px">Agent 自己规划：读原文 → 挑词 → 逐个查词 → 出词表 → 出练习页 → 回写错词本。</p>
+      <div style="margin-top:16px">
+        <span class="pill ok">约 45 秒</span>
+        <span class="pill">12 次工具调用</span>
+        <span class="pill teal">8 处自动挖空</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 3 架构 -->
+<section class="slide" data-page="03 / 12">
+  <div class="kicker">总体架构</div>
+  <h2>一张图：用户 → 界面 → Agent ⇄ 工具 / 模型 / Skill</h2>
+  <div class="rule"></div>
+  <svg width="1144" height="392" viewBox="0 0 1144 392" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="ar" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+        <path d="M0 0.8 L8 4.5 L0 8.2 z" fill="#7b8aa5"/>
+      </marker>
+    </defs>
+    <!-- 用户 -->
+    <rect x="6" y="150" width="132" height="94" rx="12" fill="#ffffff" stroke="#c9d8f0" stroke-width="1.6"/>
+    <text x="72" y="185" text-anchor="middle" font-size="17" font-weight="700" fill="#0f172a" font-family="sans-serif">用户</text>
+    <text x="72" y="210" text-anchor="middle" font-size="12.5" fill="#5b6b84" font-family="sans-serif">中文自然语言</text>
+    <text x="72" y="228" text-anchor="middle" font-size="12.5" fill="#5b6b84" font-family="sans-serif">一句话下单</text>
+
+    <!-- Streamlit -->
+    <rect x="180" y="132" width="168" height="130" rx="12" fill="#e8effd" stroke="#9dbcf5" stroke-width="1.6"/>
+    <text x="264" y="163" text-anchor="middle" font-size="16" font-weight="700" fill="#1d4ed8" font-family="sans-serif">Streamlit 界面</text>
+    <text x="264" y="188" text-anchor="middle" font-size="12.5" fill="#33415c" font-family="sans-serif">对话 + 工具调用轨迹</text>
+    <text x="264" y="208" text-anchor="middle" font-size="12.5" fill="#33415c" font-family="sans-serif">侧边栏：档案 / 产物 / 自检</text>
+    <text x="264" y="232" text-anchor="middle" font-size="12" fill="#5b6b84" font-family="sans-serif">会话存 data/session.json</text>
+
+    <!-- LangGraph -->
+    <rect x="392" y="112" width="330" height="170" rx="14" fill="#ffffff" stroke="#2563eb" stroke-width="2"/>
+    <text x="557" y="142" text-anchor="middle" font-size="16" font-weight="700" fill="#1d4ed8" font-family="sans-serif">LangGraph 状态图</text>
+    <rect x="416" y="160" width="120" height="46" rx="9" fill="#e8effd" stroke="#9dbcf5"/>
+    <text x="476" y="189" text-anchor="middle" font-size="14" font-weight="700" fill="#1d4ed8" font-family="sans-serif">agent 节点</text>
+    <rect x="578" y="160" width="120" height="46" rx="9" fill="#e3f6f3" stroke="#7fd4c9"/>
+    <text x="638" y="189" text-anchor="middle" font-size="14" font-weight="700" fill="#0b7a70" font-family="sans-serif">tools 节点</text>
+    <path d="M536 175 H576" stroke="#7b8aa5" stroke-width="1.6" marker-end="url(#ar)"/>
+    <path d="M638 206 C638 236 476 236 476 208" stroke="#7b8aa5" stroke-width="1.6" fill="none" marker-end="url(#ar)"/>
+    <text x="557" y="252" text-anchor="middle" font-size="11.5" fill="#5b6b84" font-family="sans-serif">tools_condition：要工具就去 tools，不要就结束</text>
+    <text x="557" y="270" text-anchor="middle" font-size="11.5" fill="#5b6b84" font-family="sans-serif">recursion_limit = 60（一次工具调用占 2 步）</text>
+
+    <!-- 模型 -->
+    <rect x="762" y="26" width="176" height="86" rx="12" fill="#fff7ed" stroke="#f5c78a" stroke-width="1.6"/>
+    <text x="850" y="56" text-anchor="middle" font-size="15" font-weight="700" fill="#b45309" font-family="sans-serif">百炼 qwen-plus</text>
+    <text x="850" y="78" text-anchor="middle" font-size="12" fill="#7c5a2a" font-family="sans-serif">OpenAI 兼容端点</text>
+    <text x="850" y="96" text-anchor="middle" font-size="11.5" fill="#7c5a2a" font-family="sans-serif">换模型只改 .env</text>
+
+    <!-- Skill -->
+    <rect x="762" y="126" width="176" height="86" rx="12" fill="#e3f6f3" stroke="#7fd4c9" stroke-width="1.6"/>
+    <text x="850" y="152" text-anchor="middle" font-size="14" font-weight="700" fill="#0b7a70" font-family="sans-serif">Skill：外刊精读</text>
+    <text x="850" y="172" text-anchor="middle" font-size="11.5" fill="#14655d" font-family="sans-serif">SKILL.md + template.html</text>
+    <text x="850" y="191" text-anchor="middle" font-size="11.5" fill="#14655d" font-family="sans-serif">命中触发词才注入</text>
+
+    <!-- 记忆 -->
+    <rect x="762" y="226" width="176" height="86" rx="12" fill="#f4f0ff" stroke="#c4b5f7" stroke-width="1.6"/>
+    <text x="850" y="252" text-anchor="middle" font-size="14" font-weight="700" fill="#5b21b6" font-family="sans-serif">长期记忆</text>
+    <text x="850" y="272" text-anchor="middle" font-size="11.5" fill="#5b21b6" font-family="sans-serif">learner_profile.json</text>
+    <text x="850" y="291" text-anchor="middle" font-size="11.5" fill="#5b21b6" font-family="sans-serif">错词本拼进系统提示词</text>
+
+    <!-- 工具 -->
+    <rect x="392" y="306" width="330" height="76" rx="12" fill="#f8fafc" stroke="#c9d8f0" stroke-width="1.6"/>
+    <text x="557" y="320" text-anchor="middle" font-size="13" font-weight="700" fill="#1e3a8a" font-family="sans-serif">7 个自定义工具（@tool）</text>
+    <text x="557" y="340" text-anchor="middle" font-size="10.8" fill="#33415c" font-family="monospace">load_text · read_article · lookup_word</text>
+    <text x="557" y="356" text-anchor="middle" font-size="10.8" fill="#33415c" font-family="monospace">make_wordlist_csv · build_worksheet_html</text>
+    <text x="557" y="372" text-anchor="middle" font-size="10.8" fill="#33415c" font-family="monospace">build_vocab_doc · record_mistakes</text>
+
+    <!-- outputs -->
+    <rect x="980" y="150" width="158" height="120" rx="12" fill="#e8f7ee" stroke="#96d9b0" stroke-width="1.6"/>
+    <text x="1059" y="178" text-anchor="middle" font-size="14.5" font-weight="700" fill="#15803d" font-family="sans-serif">outputs/</text>
+    <text x="1059" y="200" text-anchor="middle" font-size="11.5" fill="#166534" font-family="sans-serif">唯一可写目录</text>
+    <text x="1059" y="220" text-anchor="middle" font-size="11.5" fill="#166534" font-family="monospace">*.csv（utf-8-sig）</text>
+    <text x="1059" y="238" text-anchor="middle" font-size="11.5" fill="#166534" font-family="monospace">*.html / *.docx</text>
+    <text x="1059" y="258" text-anchor="middle" font-size="11" fill="#166534" font-family="sans-serif">越界直接报错</text>
+
+    <!-- 连线 -->
+    <path d="M138 197 H176" stroke="#7b8aa5" stroke-width="1.6" marker-end="url(#ar)"/>
+    <path d="M348 197 H388" stroke="#7b8aa5" stroke-width="1.6" marker-end="url(#ar)"/>
+    <path d="M722 155 C760 120 748 78 758 72" stroke="#7b8aa5" stroke-width="1.6" fill="none" marker-end="url(#ar)"/>
+
+    <!-- demo 只读 -->
+    <rect x="392" y="40" width="150" height="52" rx="10" fill="#ffffff" stroke="#c9d8f0" stroke-width="1.6" stroke-dasharray="5 4"/>
+    <text x="467" y="62" text-anchor="middle" font-size="13" font-weight="700" fill="#33415c" font-family="sans-serif">demo/*.txt</text>
+    <text x="467" y="80" text-anchor="middle" font-size="11" fill="#5b6b84" font-family="sans-serif">只读</text>
+    <path d="M467 96 V158" stroke="#7b8aa5" stroke-width="1.4" stroke-dasharray="4 4" marker-end="url(#ar)"/>
+    <path d="M557 306 V284" stroke="#7b8aa5" stroke-width="1.4" marker-end="url(#ar)"/>
+  </svg>
+  <p class="small muted" style="margin-top:14px">实线是数据流，虚线是只读素材。<b>读写都只有一条合法通道</b>：读只有 <code class="inline">demo/</code> 与用户自贴的固定槽位（工具没有路径参数），写只能写 <code class="inline">outputs/</code>。</p>
+</section>
+
+<!-- 4 主路径实测 -->
+<section class="slide" data-page="04 / 12">
+  <div class="kicker">关键能力 · 主路径</div>
+  <h2>一句话进去，12 次工具调用出来</h2>
+  <div class="rule"></div>
+  <div class="grid" style="grid-template-columns:1.32fr 1fr;gap:26px">
+    <div class="timeline" style="gap:6px">
+      <div class="tl"><span class="t">user</span><span>「帮我精读 demo 里那篇校园碳排的文章，挑出 8 个 CET-6 生词」</span></div>
+      <div class="tl tool"><span class="t">step 1</span><span><span class="n">read_article</span>　读 <code class="inline">demo/article_sample.txt</code></span></div>
+      <div class="tl" style="border-left:3px solid #d97706;padding-left:10px"><span class="t">自纠</span><span>第一次猜了 <code class="inline">campus_carbon.txt</code>，工具返回「不存在，可用文件：article_sample.txt」，它<b>自己改参数重试</b>——报错比静默兜底有用</span></div>
+      <div class="tl tool"><span class="t">循环 ×8</span><span><span class="n">lookup_word</span>　baseline / structural / trivial / cumulative / framework / allocate / enforceable / scrutiny</span></div>
+      <div class="tl out"><span class="t">汇总</span><span><span class="n">make_wordlist_csv</span>　→ <code class="inline">…wordlist.csv</code> <b>+ 同名 .docx</b>（逐词分块的笔记，同一步落盘）</span></div>
+      <div class="tl out"><span class="t">汇总</span><span><span class="n">build_worksheet_html</span>　→ <code class="inline">outputs/campus_carbon_worksheet.html</code></span></div>
+      <div class="tl"><span class="t">end</span><span>中文总结 + 如实声明哪几个词未收录、建议核对权威词典</span></div>
+    </div>
+    <div>
+      <div class="grid" style="grid-template-columns:1fr 1fr;gap:14px">
+        <div class="card" style="padding:16px 18px"><div class="stat">48<span style="font-size:20px">s</span><small>端到端耗时</small></div></div>
+        <div class="card" style="padding:16px 18px"><div class="stat">12<small>次工具调用 / 20 余步</small></div></div>
+        <div class="card" style="padding:16px 18px"><div class="stat">8<small>处自动挖空</small></div></div>
+        <div class="card" style="padding:16px 18px"><div class="stat">3<small>个交付文件（CSV / Word / 练习页）</small></div></div>
+      </div>
+      <div class="card" style="margin-top:16px;background:#fff;border-left:4px solid var(--accent)">
+        <h3 style="font-size:16px">界面里看得到每一步</h3>
+        <p style="font-size:15px;margin-top:6px">用 <code class="inline">st.status</code> 把事件流逐条展开：工具名、参数、返回前 90 字符。教师可以当场确认「是工具在算，不是模型在说」。</p>
+      </div>
+      <p class="tiny muted" style="margin-top:12px">数据来自 <code class="inline">scripts/rehearse.py</code> 的真实运行日志，非手写。</p>
+    </div>
+  </div>
+</section>
+
+<!-- 5 Skill -->
+<section class="slide" data-page="05 / 12">
+  <div class="kicker">关键能力 · Skill</div>
+  <h2>Skill 不是更长的提示词，是<span class="hl">按需加载的流程包</span></h2>
+  <div class="rule"></div>
+  <div class="grid g2" style="gap:22px">
+    <div>
+      <div class="card" style="margin-bottom:14px">
+        <h3><span class="num">1</span>常驻人设（每轮都在）</h3>
+        <p>身份、七个工具怎么用、十一条纪律、当前学习者档案。短、稳定、不含具体作业流程。</p>
+      </div>
+      <div class="card" style="margin-bottom:14px;border-color:#7fd4c9;background:#f3fcfb">
+        <h3><span class="num" style="background:var(--teal)">2</span>Skill（命中才拼进来）</h3>
+        <p>精读六步法 + 输出格式契约 + HTML 模板。<b>没命中触发词，一个字都不进上下文。</b></p>
+      </div>
+      <div class="card" style="border-color:#c4b5f7;background:#faf8ff">
+        <h3><span class="num" style="background:#7c3aed">3</span>动态档案（每轮重算）</h3>
+        <p>目标考试、水平、错词本。跟着 JSON 变，不用改代码。</p>
+      </div>
+    </div>
+    <div>
+      <pre><span class="c"># agent/prompts.py · select_skill()</span>
+<span class="k">def</span> select_skill(query: str, history: str = <span class="s">""</span>) -> str | <span class="k">None</span>:
+    <span class="c">"""按触发词决定是否加载技能全文。"""</span>
+    haystack = <span class="s">f"{query}\n{history}"</span>.lower()
+    <span class="k">if</span> <span class="k">not</span> any(k <span class="k">in</span> haystack <span class="k">for</span> k <span class="k">in</span> SKILL_TRIGGERS):
+        <span class="k">return</span> <span class="k">None</span>          <span class="c"># ← 直接不加载</span>
+    skill_file = SKILL_DIR / <span class="s">"intensive-reading"</span> / <span class="s">"SKILL.md"</span>
+    ...
+</pre>
+      <div class="card" style="margin-top:14px;padding:16px 20px">
+        <h3 style="font-size:16px">实测两种输入的系统提示词长度</h3>
+        <table style="margin-top:8px">
+          <tr><td style="font-size:15px">「帮我精读这篇文章…」</td><td style="font-size:15px"><b>1717</b> 字符</td><td><span class="pill ok">注入</span></td></tr>
+          <tr><td style="font-size:15px">「今天天气怎么样」</td><td style="font-size:15px"><b>0</b> 字符</td><td><span class="pill">不注入</span></td></tr>
+        </table>
+      </div>
+      <p class="small muted" style="margin-top:12px">加一个新技能 = 加一个目录，<b>主提示词一行不改</b>。这是 Skill 和 system prompt 最实际的区别。</p>
+    </div>
+  </div>
+</section>
+
+<!-- 6 事实校验 -->
+<section class="slide" data-page="06 / 12" style="background:linear-gradient(180deg,#fdf7f7 0%,#f6f8fc 46%)">
+  <div class="kicker" style="color:#b91c1c">关键能力 · 工具为什么不可替代</div>
+  <h2>提示词写「不许编」，它还是编了</h2>
+  <div class="rule" style="background:#dc2626"></div>
+  <div class="grid g2" style="gap:20px;align-items:start">
+    <div>
+      <h3 style="color:#b91c1c;margin-bottom:10px">修复前：查词失败 → 模型自己补了个等级</h3>
+      <pre style="background:#2a1416;font-size:13.6px"><span class="c"># 写盘前，模型提交的等级</span>
+structural   adj.   结构上的   <span class="e">CET-6</span>   <span class="c">← lookup_word 返回 NOT_FOUND</span>
+enforceable  adj.   可执行的   <span class="e">CET-6</span>   <span class="c">← 同上</span>
+mitigate     v.     减轻；缓和  CET-6</pre>
+      <p class="small" style="margin-top:10px;color:#8a2c2c">查词工具明明返回了 <code class="inline">NOT_FOUND</code>，模型在写 CSV 时仍然凭印象填了 <code class="inline">CET-6</code>。读起来毫无破绽——<b>这才是最危险的地方</b>。</p>
+      <div class="card" style="margin-top:14px;background:var(--warn-soft);border-color:#f0cf9a">
+        <p style="font-size:15.5px">只在提示词加一句「不许编造等级」，重跑之后依然会编。<b>模型的自我约束不是约束。</b></p>
+      </div>
+      <div class="card" style="margin-top:12px;background:#eef4ff;border-color:#9dbcf5">
+        <p style="font-size:15px"><b>结论</b>：工具的价值不是「帮模型做事」，而是把不确定的东西变成可核验的。校验写进代码，不靠模型自觉。</p>
+      </div>
+    </div>
+    <div>
+      <h3 style="color:#15803d;margin-bottom:10px">修复后：写盘前用词库复核一遍</h3>
+      <pre style="font-size:13.6px"><span class="c"># tools/wordlist.py · _verify()</span>
+<span class="k">for</span> row <span class="k">in</span> rows:
+    known = lookup(row[<span class="s">"word"</span>])
+    <span class="k">if</span> known <span class="k">is</span> <span class="k">None</span>:
+        row[<span class="s">"level"</span>]  = <span class="s">"未收录"</span>
+        row[<span class="s">"source"</span>] = <span class="s">"模型推断"</span>
+    <span class="k">else</span>:
+        row[<span class="s">"level"</span>]  = known[<span class="s">"level"</span>]   <span class="c"># 词库覆盖</span>
+        row[<span class="s">"source"</span>] = <span class="s">"本地词库"</span>
+<span class="c"># 这两项不写进 CSV，只变成 Word 的等级标签与「未收录」小字注</span></pre>
+      <pre style="background:#0d2a1c;margin-top:12px;font-size:13.2px"><span class="c"># 两个文件的分工：数据归数据，判断归标签</span>
+outputs/*.csv   → word, phonetic, pos, cn, example    <span class="c">（五列，不含等级）</span>
+outputs/*.docx  → 〔<span class="s">未收录</span>〕 structural   <span class="c">← 注：释义与用法为模型推断</span>
+                  〔CET-6〕  mitigate     〔CET-4〕  sustainable</pre>
+      <p class="small" style="margin-top:10px;color:#14655d">模型随即在回复里主动声明：「含 3 个未收录词，建议同步核对权威词典」。<b>说法的可信度，来自文件里有据可查。</b><span class="tiny muted">（该次数随所选文章与挑词而变，通常 2～3 个）</span></p>
+    </div>
+  </div>
+</section>
+
+<!-- 7 权限隔离 -->
+<section class="slide" data-page="07 / 12">
+  <div class="kicker">关键能力 · 权限隔离</div>
+  <h2>模型给的路径是<span class="hl">不可信输入</span></h2>
+  <div class="rule"></div>
+  <div class="grid" style="grid-template-columns:1.15fr 1fr;gap:26px">
+    <div>
+      <pre><span class="c"># config.py · 所有写盘只有这一个入口</span>
+<span class="k">def</span> safe_output_path(filename: str, default_ext=<span class="s">".txt"</span>) -> Path:
+    raw = (filename <span class="k">or</span> <span class="s">""</span>).strip().replace(<span class="s">"\\"</span>, <span class="s">"/"</span>)
+    <span class="k">if</span> raw.lower().startswith(<span class="s">"outputs/"</span>):   <span class="c"># 模型常这么写</span>
+        raw = raw[len(<span class="s">"outputs/"</span>):]
+
+    <span class="k">if</span> <span class="s">"/"</span> <span class="k">in</span> raw <span class="k">or</span> raw <span class="k">in</span> (<span class="s">"."</span>, <span class="s">".."</span>):
+        <span class="k">raise</span> ValueError(            <span class="c"># ← 明确失败，不静默改写</span>
+            <span class="s">f"拒绝写入 outputs 之外的路径：{filename}"</span>
+            <span class="s">"（filename 只接受纯文件名）"</span>)
+
+    target = (OUTPUT_DIR / name).resolve()
+    <span class="k">if</span> target.parent != OUTPUT_DIR.resolve():
+        <span class="k">raise</span> ValueError(...)         <span class="c"># 兜底：符号链接也拦住</span>
+    <span class="k">return</span> target</pre>
+    </div>
+    <div>
+      <div class="card" style="border-left:4px solid var(--warn)">
+        <h3 style="font-size:17px">为什么是「报错」而不是「悄悄改名」</h3>
+        <p style="font-size:15.5px;margin-top:6px">初版用 <code class="inline">os.path.basename()</code> 把 <code class="inline">../evil.txt</code> 截成 <code class="inline">evil.txt</code>——文件确实安全了，但模型以为自己写到了别处，<b>汇报的路径就是错的</b>。</p>
+        <p style="font-size:15.5px;margin-top:8px">改成抛错之后，模型能从报错里读到正确用法，自己改参数重试。<b>失败可解释，比默默成功更有用。</b></p>
+      </div>
+      <div class="card" style="margin-top:14px;border-left:4px solid var(--teal)">
+        <h3 style="font-size:17px">读侧对称</h3>
+        <p style="font-size:15.5px;margin-top:6px"><code class="inline">read_article</code> 只允许读 <code class="inline">demo/</code>。否则模型顺着 <code class="inline">../</code> 就能把 <code class="inline">.env</code> 读出来，贴进对话。</p>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <h3 style="font-size:17px">自检里就有这两条</h3>
+        <p style="font-size:15.5px;margin-top:6px"><code class="inline">selftest.py</code> 18 项检查中包含「越权读拦截」「越权写拦截」，<b>答辩时可以直接跑给别人看</b>。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 8 与课堂关系 -->
+<section class="slide" data-page="08 / 12">
+  <div class="kicker">与课堂实验的关系</div>
+  <h2>用了 demo_1～demo_5 的哪些块，自己加了什么</h2>
+  <div class="rule"></div>
+  <table>
+    <tr><th style="width:120px">课堂 demo</th><th style="width:300px">用到的能力</th><th>本项目的做法</th></tr>
+    <tr>
+      <td><b>demo_1</b></td>
+      <td>Streamlit 界面、本地知识库思路</td>
+      <td>保留 Streamlit；<b>界面层零业务逻辑</b>，只负责渲染事件流与文件下载</td>
+    </tr>
+    <tr>
+      <td><b>demo_2</b></td>
+      <td>OpenAI 兼容接口、Tool Calling、流式输出</td>
+      <td>全部用上；流式做的是<b>工具调用事件流</b>（逐步展开），未做 token 级打字机</td>
+    </tr>
+    <tr>
+      <td><b>demo_3 / 4</b></td>
+      <td>云端模型调用、密钥与环境变量管理</td>
+      <td><code class="inline">.env</code> + <code class="inline">.env.example</code>；启动时检测 Key 缺失并给出可照做的指引</td>
+    </tr>
+    <tr>
+      <td><b>demo_5</b></td>
+      <td>Agent 框架、Skills、长期记忆、WebUI</td>
+      <td>框架换成 <b>LangGraph</b>；Skill 自建；记忆落成可读 JSON</td>
+    </tr>
+  </table>
+  <div class="card" style="margin-top:18px;background:#fff">
+    <h3 style="font-size:17px;margin-bottom:10px">相对课堂代码的增量</h3>
+    <div class="grid g3" style="gap:12px">
+      <p style="font-size:15px"><span class="pill">1</span>7 个工具全部自写，课堂无对应实现</p>
+      <p style="font-size:15px"><span class="pill">2</span>自建 Skill 目录，流程与版式都和代码解耦</p>
+      <p style="font-size:15px"><span class="pill">3</span>写盘 / 读盘双向权限隔离</p>
+      <p style="font-size:15px"><span class="pill">4</span>挖空算法：词形变体匹配，不是字符串替换</p>
+      <p style="font-size:15px"><span class="pill">5</span>三层提示词组装，加技能不动主提示词</p>
+      <p style="font-size:15px"><span class="pill teal">6</span>工具回传事实（列名 / 次数），拦下编造的等级与列</p>
+    </div>
+  </div>
+  <p class="small muted" style="margin-top:12px">说明：课程要求「≥2 个自定义工具 <b>或</b> 1 个 MCP 服务器」，本项目选前者（7 个）。MCP 化路径见最后一页。</p>
+</section>
+
+<!-- 9 思政合规 -->
+<section class="slide" data-page="09 / 12">
+  <div class="kicker">思政与合规</div>
+  <h2>落在「学习」上，不越到「代劳」上</h2>
+  <div class="rule"></div>
+  <div class="grid g2" style="gap:20px">
+    <div>
+      <div class="card" style="border-left:4px solid var(--ok)">
+        <h3 style="font-size:17px">选题正当性</h3>
+        <p style="font-size:15.5px;margin-top:6px">服务对象是备考学生本人的<b>学习方法</b>：分级词汇、精读练习、错词复盘。不产出可提交的作业成品，只产出练习材料。</p>
+      </div>
+      <div class="card" style="margin-top:12px;border-left:4px solid var(--accent)">
+        <h3 style="font-size:17px">数据边界</h3>
+        <p style="font-size:15.5px;margin-top:6px">学习者档案是<b>虚构样例</b>（「样例同学」），无真实学号、手机号、成绩。词库为教学整理，例句自写，非词典原文。</p>
+      </div>
+      <div class="card" style="margin-top:12px;border-left:4px solid var(--warn)">
+        <h3 style="font-size:17px">密钥管理</h3>
+        <p style="font-size:15.5px;margin-top:6px"><code class="inline">.env</code> 在 <code class="inline">.gitignore</code> 中，仓库里只有占位符。<code class="inline">git ls-files</code> 可当场验证没有真 Key。</p>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="background:#f9fbfe">
+        <h3 style="font-size:16px;margin-bottom:8px">拒绝代写 —— 实测记录（话术 5）</h3>
+        <p style="font-size:14.5px;background:#eef4ff;padding:10px 12px;border-radius:8px;font-family:var(--mono)">
+          「帮我把这篇文章翻译成中文，我要抄到作业里交」
+        </p>
+        <p style="font-size:14.8px;margin-top:10px;line-height:1.6">
+          <b>Agent</b>：拒绝提供全文翻译供抄写。理由是这不符合学习目标，也无助于提升精读能力。改为提供三条替代路径：可打印的精读练习页 / 10 个高频词的释义与例句 / 可导入游戏的词表。
+        </p>
+        <div style="margin-top:8px">
+          <span class="pill ok">1 步即拒绝，未调用任何工具</span>
+        </div>
+      </div>
+      <div class="card" style="margin-top:12px;background:var(--warn-soft);border-color:#f0cf9a">
+        <h3 style="font-size:16px">另一条被实测逼出来的边界</h3>
+        <p style="font-size:15px;margin-top:6px">模型曾声称「已自动同步进错词本，打开 App 即可见」——本项目<b>根本没接游戏</b>。已从两处封住：工具返回里写明「仅写本地 JSON」，提示词第 9 条禁止这类表述。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 10 演示步骤 -->
+<section class="slide" data-page="10 / 12">
+  <div class="kicker">现场演示</div>
+  <h2>五条话术，按这个顺序讲</h2>
+  <div class="rule"></div>
+  <div class="grid g2" style="gap:10px">
+    <div class="card" style="padding:11px 16px">
+      <h3 style="font-size:15.5px"><span class="num">1</span>主路径（约 50 秒）</h3>
+      <p style="font-size:14.5px;font-family:var(--mono);background:#eef4ff;padding:6px 9px;border-radius:7px;margin:5px 0">帮我精读 demo 里那篇校园碳排的文章，挑出 8 个 CET-6 生词</p>
+      <p style="font-size:13.6px">看 <code class="inline">st.status</code> 里 12 次工具调用滚过去，包括它猜错文件名后自己改参数那一下。</p>
+    </div>
+    <div class="card" style="padding:11px 16px">
+      <h3 style="font-size:15.5px"><span class="num">2</span>长期记忆 + 复习排期（约 25 秒）</h3>
+      <p style="font-size:14.5px;font-family:var(--mono);background:#eef4ff;padding:6px 9px;border-radius:7px;margin:5px 0">今天该复习哪几个词？我 mitigate 又记混了</p>
+      <p style="font-size:13.6px">调 <code class="inline">record_mistakes</code>，返回的 <code class="inline">due</code> 就是下次复习日——<b>日期是代码算的，模型只能抄</b>。</p>
+    </div>
+    <div class="card" style="padding:11px 16px;grid-column:1 / -1;border-color:#7fd4c9;background:#f3fcfb">
+      <h3 style="font-size:15.5px"><span class="num" style="background:var(--teal)">3</span>贴自己的文章（约 40 秒，<b>压轴</b>）</h3>
+      <p style="font-size:14.5px;font-family:var(--mono);background:#e6f8f4;padding:6px 9px;border-radius:7px;margin:5px 0">粘贴框里事先放好一段别的题材的英文 → 点「用这篇开始精读」</p>
+      <p style="font-size:13.6px">工具不读文件、只读粘贴槽 <code class="inline">data/current_article.txt</code>，却整篇换了题材。<b>「材料是我自己的」这一条，扇贝给不了。</b></p>
+    </div>
+    <div class="card" style="padding:11px 16px;border-color:#96d9b0;background:#f4fbf7">
+      <h3 style="font-size:15.5px"><span class="num" style="background:var(--ok)">4</span>边界（约 5 秒）</h3>
+      <p style="font-size:14.5px;font-family:var(--mono);background:#e8f7ee;padding:6px 9px;border-radius:7px;margin:5px 0">帮我把这篇文章翻译成中文，我要抄到作业里交</p>
+      <p style="font-size:13.6px">它拒绝，一步没调工具。<b>最能说明边界是设计进去的。</b></p>
+    </div>
+    <div class="card" style="padding:11px 16px;background:#fff">
+      <h3 style="font-size:15.5px"><span class="num">5</span>备用：只调一个工具（约 18 秒）</h3>
+      <p style="font-size:14.5px;font-family:var(--mono);background:#f4f6fa;padding:6px 9px;border-radius:7px;margin:5px 0">把这几个词做成 CSV：mitigate, incentive, cumulative, viable</p>
+      <p style="font-size:13.6px">时间富余才做；超时就跳过，主路径里已经出现过同一件事。</p>
+    </div>
+  </div>
+  <div class="grid g2" style="gap:10px;margin-top:9px">
+    <div class="card" style="padding:10px 16px;background:#fff">
+      <p style="font-size:13.2px"><b>演示前必做</b>　① <code class="inline">outputs/</code> 清空；② 粘贴框里预放一段英文；③ 网络不稳就先跑一遍，把产物留在磁盘上当兜底。</p>
+    </div>
+    <div class="card" style="padding:10px 16px;background:#fff">
+      <p style="font-size:13.2px"><b>降级</b>　主路径失败 → 跑 <code class="inline">selftest.py</code>（18 项）证明工具层没问题 → 打开已生成的 CSV 与练习页讲产物 → 3 分钟录屏兜底。</p>
+    </div>
+  </div>
+</section>
+
+<!-- 11 差异化定位 -->
+<section class="slide" data-page="11 / 12">
+  <div class="kicker">和已上线的产品比，它特别在哪</div>
+  <h2>别人卖「读什么」，我卖「这篇怎么处理」</h2>
+  <div class="rule" style="margin:14px 0 14px"></div>
+  <table style="font-size:14.5px">
+    <thead>
+      <tr>
+        <th style="width:112px"></th>
+        <th>内容平台（扇贝阅读 / 流利阅读）</th>
+        <th>AI 制卡工具（粘贴转卡）</th>
+        <th style="color:#1d4ed8">本项目</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="muted" style="padding:11px 12px">内容来源</td>
+        <td style="padding:11px 12px">平台当日外刊，只能读它的</td>
+        <td style="padding:11px 12px">自己粘贴文本或 URL</td>
+        <td style="padding:11px 12px;background:#f2f6ff"><b>自己的材料</b>：老师发的 PDF、订阅的 newsletter</td>
+      </tr>
+      <tr>
+        <td class="muted" style="padding:11px 12px">产出什么</td>
+        <td style="padding:11px 12px">生词进它的生词本，练习在它的 App 里做</td>
+        <td style="padding:11px 12px">Anki 卡组</td>
+        <td style="padding:11px 12px;background:#f2f6ff"><b>CSV + 单文件 HTML</b>，可打印、可转发</td>
+      </tr>
+      <tr>
+        <td class="muted" style="padding:11px 12px">过程可见</td>
+        <td style="padding:11px 12px">黑盒推荐 + 人工精讲</td>
+        <td style="padding:11px 12px">单步直转，看不到中间</td>
+        <td style="padding:11px 12px;background:#f2f6ff"><b>12 次工具调用逐条滚出</b>，每步可追问</td>
+      </tr>
+      <tr>
+        <td class="muted" style="padding:11px 12px">事实保证</td>
+        <td style="padding:11px 12px">人写的，可信但贵</td>
+        <td style="padding:11px 12px">全靠模型，会编</td>
+        <td style="padding:11px 12px;background:#f2f6ff"><b>词库硬校验</b>，未收录强制标「模型推断」</td>
+      </tr>
+      <tr>
+        <td class="muted" style="padding:11px 12px">想改流程</td>
+        <td style="padding:11px 12px">要提需求、等排期</td>
+        <td style="padding:11px 12px">改提示词，改了不知道影响哪</td>
+        <td style="padding:11px 12px;background:#f2f6ff"><b>加一个 SKILL.md 目录</b>，Python 一行不改</td>
+      </tr>
+      <tr>
+        <td class="muted" style="padding:9px 12px">复习排期</td>
+        <td style="padding:9px 12px">内置间隔重复，跨设备同步</td>
+        <td style="padding:9px 12px">交给 Anki 的调度器</td>
+        <td style="padding:9px 12px;background:#f2f6ff">简化 SM-2（两档），<b>单机</b>——这一项它们更强</td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="grid g2" style="margin-top:14px;gap:14px">
+    <div class="card" style="padding:13px 18px;background:var(--accent-soft);border-color:#c9dcff">
+      <h3 style="font-size:15.5px;margin-bottom:5px">第三条路</h3>
+      <p style="font-size:14.5px">商业产品只有两条：<b>全人工写</b>（可信但贵）或 <b>全 AI 生成</b>（便宜但会编）。这里走第三条——<b>模型负责决策与组织，事实由代码校验</b>。代价是小、慢、只服务一个人；好处是每一步都能被指着问。</p>
+    </div>
+    <div class="card" style="padding:13px 18px">
+      <h3 style="font-size:15.5px;margin-bottom:5px">「那为什么不用现成的？」</h3>
+      <p style="font-size:14.5px">因为它要我把材料喂进<b>它的内容库</b>，而我要的恰恰是处理<b>我手上这一篇</b>，并且打印出来做。这个场景它不接，也不让我改流程。</p>
+    </div>
+  </div>
+  <p class="tiny muted" style="margin-top:9px">如实短板：没有 token 级流式、没有发音跟读、没有句子级拆解、单用户单机。<b>词库和复习排期是这一版才补的</b>——补它之前，「闭环」这句话我说不出口。</p>
+</section>
+
+<!-- 11 不足与问答 -->
+<section class="slide" data-page="12 / 12">
+  <div class="kicker">不足 · 改进 · 预判提问</div>
+  <h2>哪些没做好，以及被问到怎么答</h2>
+  <div class="rule"></div>
+  <div class="grid g2" style="gap:20px;align-items:start">
+    <div>
+      <h3 style="font-size:17px;margin-bottom:8px;color:#b45309">已知不足</h3>
+      <div class="card" style="padding:14px 18px">
+        <p style="font-size:14.8px">① 词库是考试词表（6161 条，高考/四级/六级），派生词如 retrieval、coherence 仍会未收录，只能标「模型推断」。</p>
+        <p style="font-size:14.8px;margin-top:6px">② 会话只存文本，不存工具调用中间态，重开看不到上轮轨迹。</p>
+        <p style="font-size:14.8px;margin-top:6px">③ 未做多用户隔离，<code class="inline">outputs/</code> 与档案是单例，适合演示不适合上线。</p>
+        <p style="font-size:14.8px;margin-top:6px">④ 挖空只覆盖规则变形，<code class="inline">analysis → analyses</code> 这类不规则变化会漏。</p>
+        <p style="font-size:14.8px;margin-top:6px">⑤ 流式只到工具级，未做 token 级打字机。</p>
+      </div>
+      <h3 style="font-size:17px;margin:14px 0 8px;color:#15803d">下一步</h3>
+      <div class="card" style="padding:14px 18px;background:#f4fbf7;border-color:#96d9b0">
+        <p style="font-size:14.8px">接真实词典 API 替换考试词表 → 复习排期从两档简化 SM-2 升级到四档评分（Again / Hard / Good / Easy）→ 把 7 个工具包成 MCP server（stdio，接口不用改）→ 加子代理分工（选词 / 校验各一个）→ 补句子级长难句拆解、导出 Anki apkg。</p>
+      </div>
+    </div>
+    <div>
+      <h3 style="font-size:17px;margin-bottom:8px">教师大概率会问的四个问题</h3>
+      <div class="card" style="padding:14px 18px;margin-bottom:10px">
+        <p style="font-size:14.5px"><b>Q：工具不调用，模型会怎样？</b><br>A：会编。实测它给 <code class="inline">NOT_FOUND</code> 的词补了 CET-6 等级，看着毫无破绽。工具的作用是把不确定变成可核验。</p>
+      </div>
+      <div class="card" style="padding:14px 18px;margin-bottom:10px">
+        <p style="font-size:14.5px"><b>Q：Skill 和系统提示词有什么区别？</b><br>A：提示词常驻、必进上下文；Skill 按需加载，能带模板资产，可单独改版本。实测相关请求注入 1717 字符，无关请求 0。</p>
+      </div>
+      <div class="card" style="padding:14px 18px;margin-bottom:10px">
+        <p style="font-size:14.5px"><b>Q：密钥为什么不能进 Git？</b><br>A：历史不可逆，push 出去等于公开，公开仓库会被爬虫扫。只能作废重签。所以 <code class="inline">.env</code> 进 ignore，仓库只留 <code class="inline">.env.example</code>。</p>
+      </div>
+      <div class="card" style="padding:14px 18px">
+        <p style="font-size:14.5px"><b>Q：为什么没用 MCP？</b><br>A：课程要求「自定义工具 或 MCP」二选一，我选前者因为工具要读本地词库和模板。MCP 化只需把 7 个工具挂成 stdio server，参数表和返回格式都不用改。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<script>
+(function () {
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var i = 0;
+  var stage = document.getElementById('stage');
+
+  function fit() {
+    var w = window.innerWidth || document.documentElement.clientWidth || 1280;
+    var h = window.innerHeight || document.documentElement.clientHeight || 720;
+    var s = Math.min(w / 1280, h / 720);
+    // 预览面板 / iframe 初次布局时可能量到 0 宽高，此时 scale(0) 会让整页消失
+    if (!isFinite(s) || s < 0.08) { s = 1; }
+    slides.forEach(function (el) {
+      el.style.transform = 'scale(' + s + ')';
+    });
+  }
+  function show(n) {
+    i = Math.max(0, Math.min(slides.length - 1, n));
+    slides.forEach(function (el, k) { el.classList.toggle('active', k === i); });
+    var pn = document.getElementById('pageno');
+    if (pn) { pn.textContent = (i + 1) + ' / ' + slides.length; }
+    // 沙箱 iframe 里 replaceState 可能抛 SecurityError，不能让它中断翻页
+    try {
+      if (location.hash !== '#' + (i + 1)) {
+        history.replaceState(null, '', '#' + (i + 1));
+      }
+    } catch (e) {}
+  }
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') {
+      e.preventDefault(); show(i + 1);
+    } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+      e.preventDefault(); show(i - 1);
+    } else if (e.key === 'Home') { show(0); }
+    else if (e.key === 'End') { show(slides.length - 1); }
+    else if (e.key === 'f' || e.key === 'F') {
+      if (document.fullscreenElement) { document.exitFullscreen(); }
+      else if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen();
+      }
+    }
+  });
+  // 触控板 / 鼠标滚轮翻页
+  var lock = false;
+  window.addEventListener('wheel', function (e) {
+    if (lock || Math.abs(e.deltaY) < 24) { return; }
+    lock = true;
+    show(i + (e.deltaY > 0 ? 1 : -1));
+    setTimeout(function () { lock = false; }, 420);
+  }, { passive: true });
+
+  var start = parseInt((location.hash || '').replace('#', ''), 10);
+  var btnPrev = document.getElementById('prev');
+  var btnNext = document.getElementById('next');
+  if (btnPrev) { btnPrev.addEventListener('click', function () { show(i - 1); }); }
+  if (btnNext) { btnNext.addEventListener('click', function () { show(i + 1); }); }
+  window.addEventListener('resize', fit);
+  window.addEventListener('load', fit);
+  fit();
+  show(isNaN(start) ? 0 : start - 1);
+  stage.classList.add('ready');
+  // iframe / 预览面板尺寸常常是延迟才定下来的，补几次重算
+  [40, 200, 600, 1200].forEach(function (t) { setTimeout(fit, t); });
+  if (window.ResizeObserver) {
+    try { new ResizeObserver(fit).observe(document.documentElement); } catch (e) {}
+  }
+  setTimeout(function () {
+    var h = document.getElementById('hint');
+    if (h) { h.style.opacity = '0'; }
+  }, 3600);
+})();
+</script>
+<!-- build: 2026-10-24 19:05 · 12 页 · 外刊精读教练 -->
+</body>
+</html>

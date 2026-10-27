@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>%%TITLE%%</title>
+<style>
+  :root { --ink:#1f2328; --muted:#6b7280; --line:#e0e3e8; --accent:#1d4ed8; --soft:#f6f8fb; }
+  * { box-sizing:border-box; }
+  body { margin:0; padding:48px 24px; background:#fff; color:var(--ink);
+         font-family:"Segoe UI","Microsoft YaHei",-apple-system,sans-serif; line-height:1.9; }
+  .page { max-width:860px; margin:0 auto; }
+  header { border-bottom:2px solid var(--ink); padding-bottom:16px; margin-bottom:32px; }
+  h1 { font-size:26px; margin:0 0 10px; letter-spacing:.5px; }
+  .meta { font-size:13px; color:var(--muted); display:flex; gap:20px; flex-wrap:wrap; }
+  .meta b { color:var(--ink); font-weight:500; }
+  h2 { font-size:17px; margin:36px 0 14px; padding-left:10px;
+       border-left:3px solid var(--accent); font-weight:500; }
+  .article p { margin:0 0 16px; font-size:15.5px; font-family:Georgia,"Times New Roman",serif; }
+  .bank { background:var(--soft); border:1px solid var(--line); border-radius:8px;
+          padding:14px 18px; font-size:14px; letter-spacing:.3px; color:var(--muted); }
+  ol.blanks { list-style:none; padding:0; margin:0; columns:2; column-gap:40px; }
+  ol.blanks li { display:flex; align-items:baseline; gap:10px; margin-bottom:14px;
+                 break-inside:avoid; font-size:14px; }
+  .num { color:var(--muted); font-size:12px; min-width:20px; }
+  .blank { flex:0 0 150px; border-bottom:1px solid var(--ink); height:18px; }
+  .hint { color:#c9ced6; font-size:12px; }
+  .checklist { font-size:14px; color:var(--muted); }
+  .checklist li { margin-bottom:8px; }
+  footer { margin-top:48px; padding-top:16px; border-top:1px solid var(--line);
+           font-size:12px; color:var(--muted); line-height:1.7; }
+  @media print {
+    body { padding:0; }
+    h2 { break-after:avoid; }
+    ol.blanks li { break-inside:avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <h1>%%TITLE%%</h1>
+    <div class="meta">
+      <span>日期 <b>%%DATE%%</b></span>
+      <span>生词 <b>%%WORDS%%</b> 个</span>
+      <span>原文挖空 <b>%%HITS%%</b> 处</span>
+    </div>
+  </header>
+
+  <h2>原文精读</h2>
+  <div class="article">
+%%ARTICLE%%
+  </div>
+
+  <h2>词库</h2>
+  <div class="bank">%%BANK%%</div>
+
+  <h2>填空练习</h2>
+  <ol class="blanks">
+%%BLANKS%%
+  </ol>
+
+  <h2>自测清单</h2>
+  <ul class="checklist">
+    <li>□ 不看词库，能读出每个词的音标并说出中文</li>
+    <li>□ 能说出每个词在原文这句话里为什么用这个词性</li>
+    <li>□ 能用其中 3 个词各造一个自己的句子</li>
+    <li>□ 明天复看一遍，错的词已加入错词本</li>
+  </ul>
+
+  <footer>
+    生成本页的单词释义与考纲等级来自项目内置词库（data/lexicon.json），
+    例句为教学示例。释义请以权威词典为准。<br>
+    本页由「外刊精读教练」智能体自动生成，仅用于个人学习。
+  </footer>
+
+</div>
+</body>
+</html>

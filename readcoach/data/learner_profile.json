@@ -1,0 +1,46 @@
+{
+  "name": "样例同学",
+  "target_exam": "TOEFL 90",
+  "level": "B1+",
+  "goal": "六周内把外刊精读变成习惯，重点补学术词汇",
+  "mistakes": [
+    {
+      "word": "mitigate",
+      "count": 3,
+      "first_seen": "2026-10-14",
+      "last_seen": "2026-10-25",
+      "note": "总是和 mediate 混",
+      "reps": 0,
+      "ease": 2.1,
+      "interval": 1,
+      "due": "2026-10-26"
+    },
+    {
+      "word": "incentive",
+      "count": 2,
+      "first_seen": "2026-10-16",
+      "last_seen": "2026-10-23",
+      "note": "知道意思但写不出例句",
+      "reps": 1,
+      "ease": 2.3,
+      "interval": 1,
+      "due": "2026-10-24"
+    },
+    {
+      "word": "cumulative",
+      "count": 1,
+      "first_seen": "2026-10-20",
+      "last_seen": "2026-10-22",
+      "note": "",
+      "reps": 2,
+      "ease": 2.55,
+      "interval": 3,
+      "due": "2026-10-28"
+    }
+  ],
+  "sessions": 2,
+  "updated_at": "2026-10-27 15:45:24",
+  "language": "en",
+  "daily_dates": [],
+  "daily_lang": "en"
+}

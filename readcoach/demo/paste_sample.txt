@@ -1,0 +1,7 @@
+Why We Forget What We Read
+
+Reading feels productive. Retention rarely follows. A student can finish twenty pages, highlight half of them, and still be unable to explain the argument a week later. The problem is not effort but timing: memory is governed less by how often material is encountered than by when it is encountered again.
+
+Experiments on spaced repetition show a consistent pattern. Reviewing material just as it begins to fade produces durable recall, while massing the same number of reviews into one long session produces a brief illusion of fluency. The illusion is dangerous because it feels like learning. Rereading a familiar page generates a sense of ease that students mistake for mastery, and that ease discourages the effortful retrieval which actually strengthens memory.
+
+The practical implication is unglamorous. Short, repeated, slightly uncomfortable attempts to reconstruct an argument outperform long, comfortable passes over the same text. What feels like progress and what produces it are often different things.

@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-page-node-id="9IsXE1CA2bEaWR0P3R8Zcw">
+<head data-page-node-id="4pmMxlANeUjphr5TccjZR5">
+<meta charset="utf-8" data-page-node-id="c2iazOVvgBrx8kUBNDa30e">
+<meta name="viewport" content="width=device-width, initial-scale=1" data-page-node-id="sEkqNrhG45AJRud8WmCROf">
+<title>外刊精读教练 · 十段关键代码解读</title>
+<style>
+  :root{
+    --bg:#f6f8fc; --card:#ffffff; --ink:#0f172a; --muted:#5b6b84;
+    --line:#dfe6f2; --accent:#2563eb; --accent-soft:#e8effd;
+    --teal:#0f9d8f; --teal-soft:#e3f6f3;
+    --warn:#d97706; --warn-soft:#fef3e2;
+    --danger:#dc2626; --danger-soft:#fdeaea;
+    --ok:#16a34a; --ok-soft:#e8f7ee;
+    --mono:Consolas,"Cascadia Mono","Courier New",monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:#eef2f9; color:var(--ink);
+    font-family:-apple-system,"Segoe UI","Microsoft YaHei","PingFang SC",sans-serif;
+    overflow:hidden; -webkit-font-smoothing:antialiased;
+  }
+  #stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+  .slide{
+    position:absolute; width:1280px; height:720px; background:var(--bg);
+    padding:40px 62px 58px; display:none; flex-direction:column; overflow:hidden;
+    transform-origin:center center;
+  }
+  .slide.active{display:flex}
+  #stage:not(.ready) .slide:first-of-type{display:flex}
+  .slide::after{
+    content:attr(data-page); position:absolute; right:32px; bottom:18px;
+    font-size:12.5px; color:#9aa8bf; letter-spacing:.08em;
+  }
+  h1{font-size:52px;line-height:1.16;letter-spacing:-.02em;font-weight:800}
+  h2{font-size:27px;line-height:1.3;font-weight:750;letter-spacing:-.01em}
+  h3{font-size:20px;font-weight:700}
+  p,li{font-size:18px;line-height:1.6;color:#25324a}
+  .muted{color:var(--muted)}
+  .small{font-size:15.5px;line-height:1.55}
+  .tiny{font-size:13.5px;line-height:1.5}
+  .lead{font-size:20px;line-height:1.6;color:#33415c}
+  .kicker{
+    font-size:13px;font-weight:700;letter-spacing:.14em;color:var(--accent);
+    text-transform:uppercase;margin-bottom:9px;
+  }
+  .rule{width:58px;height:4px;background:var(--accent);border-radius:2px;margin:14px 0 20px}
+  .grid{display:grid;gap:16px}
+  .g2{grid-template-columns:1fr 1fr}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:16px 19px;
+  }
+  .card h3{margin-bottom:6px}
+  .card p{font-size:15.5px;line-height:1.55}
+  .pill{
+    display:inline-block;padding:3px 11px;border-radius:999px;font-size:13px;
+    font-weight:650;background:var(--accent-soft);color:#1d4ed8;margin:0 6px 6px 0;
+  }
+  .pill.teal{background:var(--teal-soft);color:#0b7a70}
+  .pill.warn{background:var(--warn-soft);color:#b45309}
+  .pill.danger{background:var(--danger-soft);color:#b91c1c}
+  .pill.ok{background:var(--ok-soft);color:#15803d}
+  .num{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:26px;height:26px;border-radius:7px;background:var(--accent);color:#fff;
+    font-size:14px;font-weight:700;margin-right:9px;flex:0 0 auto;
+  }
+  pre{
+    background:#0f172a;color:#e2e8f5;border-radius:11px;padding:14px 16px;
+    font-family:var(--mono);font-size:12.6px;line-height:1.66;overflow:hidden;
+    white-space:pre-wrap;word-break:break-word;align-self:start;
+  }
+  pre .c{color:#8397b8}
+  pre .k{color:#7dd3fc}
+  pre .s{color:#a7f3d0}
+  pre .e{color:#fca5a5}
+  pre .n{color:#fcd34d}
+  code.inline{
+    font-family:var(--mono);font-size:.9em;background:#e9eef8;color:#1e3a8a;
+    padding:1px 5px;border-radius:4px;
+  }
+  .flow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .flow .box{
+    background:#fff;border:1px solid var(--line);border-radius:9px;
+    padding:8px 12px;font-size:14px;font-weight:600;
+  }
+  .flow .arrow{color:#9aa8bf;font-size:16px;font-weight:700}
+  table{border-collapse:collapse;width:100%}
+  th,td{text-align:left;padding:8px 10px;font-size:14.5px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-size:12.5px;letter-spacing:.06em;color:var(--muted);font-weight:700;text-transform:uppercase}
+  tr:last-child td{border-bottom:none}
+  .cover{
+    background:
+      radial-gradient(900px 460px at 88% -8%, #dbe7ff 0%, rgba(219,231,255,0) 62%),
+      radial-gradient(760px 420px at 6% 108%, #d9f5f0 0%, rgba(217,245,240,0) 60%),
+      #f6f8fc;
+    justify-content:center;
+  }
+  .layer-tag{
+    display:inline-block;font-size:12px;font-weight:700;letter-spacing:.1em;
+    color:#fff;background:var(--accent);padding:3px 9px;border-radius:5px;
+  }
+  .layer-tag.t{background:var(--teal)}
+  .layer-tag.w{background:var(--warn)}
+  .layer-tag.d{background:#64748b}
+
+  /* 代码页布局 */
+  .codegrid{display:grid;grid-template-columns:1.18fr .82fr;gap:16px;min-height:0;margin-top:12px;align-content:start}
+  .notes{display:flex;flex-direction:column;gap:9px;min-height:0}
+  .note{background:#fff;border:1px solid var(--line);border-radius:9px;padding:9px 12px}
+  .note b{
+    display:block;font-size:11.5px;letter-spacing:.08em;color:var(--accent);
+    margin-bottom:3px;font-weight:800;
+  }
+  .note p{font-size:13.6px;line-height:1.5;color:#2b3a52}
+  .note.warn b{color:var(--warn)}
+  .note.teal b{color:#0b7a70}
+  .takeaway{
+    margin-top:auto;background:var(--accent-soft);border:1px solid #c9dcff;
+    border-radius:9px;padding:9px 14px;font-size:14.2px;line-height:1.5;
+    flex:0 0 auto;
+  }
+  .takeaway b{color:#1d4ed8}
+
+  #nav{
+    position:fixed;left:50%;bottom:14px;transform:translateX(-50%);
+    display:flex;align-items:center;gap:10px;z-index:20;
+    background:rgba(255,255,255,.86);border:1px solid var(--line);
+    border-radius:999px;padding:5px 9px;backdrop-filter:blur(6px);
+    box-shadow:0 2px 10px rgba(15,23,42,.06);
+  }
+  #nav button{
+    width:26px;height:26px;border-radius:50%;border:1px solid var(--line);
+    background:#fff;color:#41506b;font-size:15px;line-height:1;cursor:pointer;
+    font-family:inherit;
+  }
+  #nav button:hover{background:var(--accent-soft);border-color:#bcd2fb;color:#1d4ed8}
+  #hint{
+    position:fixed;right:16px;top:12px;font-size:12px;color:#93a1b8;
+    letter-spacing:.02em;z-index:9;
+  }
+  @media print{
+    body{overflow:visible;background:#fff}
+    #stage{position:static;display:block}
+    .slide{display:flex!important;position:relative;page-break-after:always;transform:none!important;margin:0 auto}
+    #nav,#hint{display:none}
+  }
+</style>
+</head>
+<body data-page-node-id="MONGFAfSpR53UioTkWppbU">
+
+<div id="stage" data-page-node-id="5O1kVKfcciI0yJqaorK1LD">
+<div class="slide cover" data-page="01 / 13" data-page-node-id="NMCqfdsvGwiMDlyPE26SWB">
+  <div class="kicker" data-page-node-id="nhfz9fB1y9pI6XF1e8ekI0">期末项目 · 代码拆解</div>
+  <h1 data-page-node-id="ppVA9lnlDLMn3LtBELWe6Q">十段代码，<br data-page-node-id="jRJEyqvHntGRtflhokjBeP">十次「不把正确性交给模型」</h1>
+  <div class="rule" data-page-node-id="CoATrkSr8N6YQWsY09UCwd"></div>
+  <p class="lead" style="max-width:760px" data-page-node-id="0quww94yPTa7G9lRPMBGVM">
+    外刊精读教练（ReadCoach）· 每段都标了真实文件与行号，都回答三个问题：
+    <b data-page-node-id="1WEOn26qKj4GaoxemKFPUO">为什么这么写</b>、<b data-page-node-id="mFxlKue8AajQznPVTFIsXZ">逻辑怎么走</b>、<b data-page-node-id="K5qlSmERUXwLoHcBGPFI1R">用到哪些知识</b>。
+  </p>
+  <div style="margin-top:26px;display:flex;gap:8px;flex-wrap:wrap" data-page-node-id="GieFb2dQBh5yK1BCpfvz2g">
+    <span class="pill" data-page-node-id="tv3tdztp7ImFQ03HnwzCzo">配置层 ×1</span>
+    <span class="pill teal" data-page-node-id="iSqjzEN4u8W0kZw8S1Dfir">编排层 ×2</span>
+    <span class="pill warn" data-page-node-id="418Bw1tjgo8tbBznmPDwBs">工具层 ×6</span>
+    <span class="pill ok" data-page-node-id="3z1237QvV55OK4Rn3FE5qE">界面层 ×1</span>
+  </div>
+  <p class="tiny muted" style="margin-top:22px" data-page-node-id="zGEMFUcBTiuIk4ghFPcQuh">下方箭头或滚轮翻页 · 按 F 全屏 · 共 13 页</p>
+</div>
+
+<div class="slide" data-page="02 / 13" data-page-node-id="gAMhccHTr6Dfk52JwFEZQ6">
+  <div class="kicker" data-page-node-id="nyA4bqAe0nEli1ujXwVtqA">地图</div>
+  <h2 data-page-node-id="BNzXkVzMMo2fjmGyik6Fvj">十段代码分布在四层，一条调用链串起来</h2>
+  <div class="rule" data-page-node-id="A8qVNGICVwpIRRcoVxwxJy"></div>
+
+  <div class="flow" style="margin-bottom:20px" data-page-node-id="GpfoEhzbaog3xlpSDbcUoT">
+    <span class="box" data-page-node-id="Z9HNrjbnz0E6nFki7wU505">用户一句话</span><span class="arrow" data-page-node-id="5v7COdkStENjMoEyQ5L0WZ">→</span>
+    <span class="box" data-page-node-id="T5ZO8yTtoUrglAcl7wYyP6">app.py 界面</span><span class="arrow" data-page-node-id="BhSdvyrRM9PbmN61g6dszT">→</span>
+    <span class="box" data-page-node-id="DWlaJBuvkdF1ei9p6DgzUC">build_system_prompt</span><span class="arrow" data-page-node-id="FZA7Hax7qhVhjZPcTd5V9y">→</span>
+    <span class="box" data-page-node-id="0xrB8jwrFhCgTJC4vJzEpM">StateGraph 循环</span><span class="arrow" data-page-node-id="SLJ0gPa5Fk5luzNB4ox6MD">→</span>
+    <span class="box" data-page-node-id="Or8HIEtEWKlQE8hRpsXbym">七个工具</span><span class="arrow" data-page-node-id="TSfMNxNInGOX7X2EvWSNk1">→</span>
+    <span class="box" data-page-node-id="JiIoK8PGIaa6ofBZG5SUmm">outputs/ 文件</span>
+  </div>
+
+  <div class="grid g3" style="align-content:start" data-page-node-id="vUrWKj1rUwnMv75RtPeaAD">
+    <div class="card" data-page-node-id="JbypQ2QoVx4sk4ns4MeRKd">
+      <span class="layer-tag d" data-page-node-id="dWCBVfo2zZMjxz3sP9H72j">配置层</span>
+      <h3 style="margin-top:9px;font-size:16px" data-page-node-id="8SXwpU0rNhEgzzQIFON5pQ">写盘权限边界</h3>
+      <p class="small" data-page-node-id="uBGApDv3f7iC1zbTnVtTCW">① <code class="inline" data-page-node-id="wsijFCtt5wwGFqMGmSTNGx">safe_output_path()</code><br data-page-node-id="BVCuKvW61gGz2sHPJxIcR5"><span class="muted" data-page-node-id="l5YKtaqZqFuFEJ7JRcOrmn">config.py:40</span></p>
+      <p class="tiny muted" style="margin-top:6px" data-page-node-id="tZxA6tgTRZVSTS37J0qDsP">Agent 只能写 outputs/，越界直接报错。</p>
+    </div>
+    <div class="card" data-page-node-id="W2FR1owsuwtxHYstLvxEDX">
+      <span class="layer-tag t" data-page-node-id="CcFiX0S7JkMupr1SFJFwHZ">编排层</span>
+      <h3 style="margin-top:9px;font-size:16px" data-page-node-id="HJ4Cpi1GSfEk5ZFong5HW5">循环与提示词</h3>
+      <p class="small" data-page-node-id="SQIFCVNW1p7zhvynfbFB6q">② <code class="inline" data-page-node-id="WYHyRdLNlEdlqX5ik9227X">StateGraph</code> 建图<br data-page-node-id="vahZSlwKqMoBWevE2gAYkb"><span class="muted" data-page-node-id="m5mfTlWa2q6z1ctBJBBCWV">graph.py:43</span></p>
+      <p class="small" data-page-node-id="92oXkI9uW4RN2o7YH5IqaE">③ <code class="inline" data-page-node-id="mxnN22RIvsiCjsOMZoLGV7">build_system_prompt()</code><br data-page-node-id="FSoZIPMt8YL7TjslCiOzjD"><span class="muted" data-page-node-id="9uSGOsdZYnebx6RhVTD4ml">prompts.py:126</span></p>
+      <p class="tiny muted" style="margin-top:6px" data-page-node-id="s46i0MC6q30c6SEMhu3ngz">agent ⇄ tools 循环；技能按需注入。</p>
+    </div>
+    <div class="card" data-page-node-id="I6XphfKPhjRSI8QEfOAUeN">
+      <span class="layer-tag w" data-page-node-id="aUuIBUI0yFrGq3fmaJ5IT7">工具层</span>
+      <h3 style="margin-top:9px;font-size:16px" data-page-node-id="TmZiltKctUNaGsCw8agC6r">接口、数据、校验</h3>
+      <p class="small" data-page-node-id="NpHtDwnQtUXAHw3gN8VyCQ">④ <code class="inline" data-page-node-id="uOqjinm4QOy2yBsRgEkyBf">@tool</code> + docstring<br data-page-node-id="FQ05UYiwGMQgLFoc8ggT3H"><span class="muted" data-page-node-id="pqXEAZMMky09KniL24zKfg">dictionary.py:22</span></p>
+      <p class="small" data-page-node-id="Jdm1kBOCIgRepBEBUO4w84">⑤ <code class="inline" data-page-node-id="5oXLE5AbCYZybChrsgT67T">load_lexicon()</code><br data-page-node-id="qUP1CE51DwTyfz6LN8198e"><span class="muted" data-page-node-id="BM1Q2gnQBxhPSnEcNzTkH1">lexicon.py:17</span></p>
+      <p class="small" data-page-node-id="s7HkXBMHX8cY5OyS9yep5D">⑥ <code class="inline" data-page-node-id="GLcQsUHU0kQx3ppxFKAE9D">_verify()</code><br data-page-node-id="fno2SdaoT5QdQiPBYs8xWW"><span class="muted" data-page-node-id="IpKAOQqV18897H6OuKNUWJ">wordlist.py:68</span></p>
+      <p class="small" data-page-node-id="5BZkPKoXrgDfLSQ5Yghte5">⑦ <code class="inline" data-page-node-id="yCVjYeU39N8nykMDZ0ZMfU">_drop_source_field()</code><br data-page-node-id="ivQPiZweF7v1erp8KdvwHW"><span class="muted" data-page-node-id="Syf3AaCdx0mlTCdyudxEHy">wordlist.py:35</span></p>
+      <p class="small" data-page-node-id="M7uGbyMG85hCu4owsNz6Ia">⑧ <code class="inline" data-page-node-id="OBxRYsjw9a4rXpNYmwdHgC">_word_pattern()</code><br data-page-node-id="ZG5kI5uUrCJyH939sFMGgw"><span class="muted" data-page-node-id="AME41tAEQoCC12ovNP08tf">worksheet.py:22</span></p>
+      <p class="small" data-page-node-id="OuASvWh7COthM6mwBUpglG">⑨ <code class="inline" data-page-node-id="1u4YWTdlzBdYierku5sviB">record_mistakes()</code><br data-page-node-id="GmMYxdUkC2vPTk3fPXirvf"><span class="muted" data-page-node-id="SFkm3hTdcLKvrnRTGkRU84">memory.py:135</span></p>
+    </div>
+  </div>
+
+  <p class="small" style="margin-top:auto;padding-top:16px" data-page-node-id="9dRIKZTFfe5coF2Ohpjgzb">
+    <span class="layer-tag d" data-page-node-id="McGsloaFONDsmNugx6O2NG">界面层</span>　⑩ <code class="inline" data-page-node-id="qAjCUFRXHWXtvnchzvox3J">graph.stream()</code> 事件循环
+    <span class="muted" data-page-node-id="HnXDXcE3tp8DJtezWAo9CX">　app.py:105 —— 把每一步摊给用户看</span>
+  </p>
+</div>
+
+<div class="slide" data-page="03 / 13" data-page-node-id="vnjKsa1oj55X6EJKGr5GIG">
+  <div class="kicker" data-page-node-id="anWJ4FgGsA65jfHZD6gxBD">代码 01 · config.py:40–72 · 配置层</div>
+  <h2 data-page-node-id="uSnLrMETdRasYBjUErKrgt">文件名是模型给的，所以它不能被信任</h2>
+  <div class="codegrid" data-page-node-id="xKXGqCjyG0XUEVEO4EBuhI">
+    <pre data-page-node-id="8MMxm5e4F9GWjvvxjIGyp5"><span class="k" data-page-node-id="WLJp4RHqyPzDMCYT0G2MHO">def</span> <span class="n" data-page-node-id="8iLEeAACGVAZVIDDc2fPNZ">safe_output_path</span>(filename: str, default_ext: str = <span class="s" data-page-node-id="lqIJaa12WvCFlVYiNvdzIk">".txt"</span>) -&gt; Path:
+    raw = (filename <span class="k" data-page-node-id="6SRkOX2Qait8FZHm4NhEId">or</span> <span class="s" data-page-node-id="f3ExSK4aDtzesBOaIaSsYj">""</span>).strip().replace(<span class="s" data-page-node-id="CZ5LhXrQGtVTDEIjt8QdDA">"\\"</span>, <span class="s" data-page-node-id="fd6txXHB4r5c3RgYYEaewH">"/"</span>)
+    <span class="c" data-page-node-id="RrniImvnFLK7g3EAQf9MIa"># 模型常写 outputs/xxx.csv，先剥掉前缀再校验</span>
+    <span class="k" data-page-node-id="1dMlgVNg9COfkpJCSnvu1R">if</span> raw.lower().startswith(<span class="s" data-page-node-id="IwCJqkNzkwLc6FGFKHhvnE">"outputs/"</span>):
+        raw = raw[len(<span class="s" data-page-node-id="cOf9NcNv9gHKmSIkKcWzGD">"outputs/"</span>):]
+
+    <span class="k" data-page-node-id="ugc1RIsDrkUmFkqMNaFHjB">if</span> <span class="s" data-page-node-id="kxeqRDeCv7TehCAhf9FaXI">"/"</span> <span class="k" data-page-node-id="G6ISLgG3jLECDGEpEDxObu">in</span> raw <span class="k" data-page-node-id="hpk9H7HdOUToobKGuxtCa3">or</span> raw <span class="k" data-page-node-id="YcIr7LfNuKOrIbaMLt6CGA">in</span> (<span class="s" data-page-node-id="GrM9heuKaTGzugftHEwluu">"."</span>, <span class="s" data-page-node-id="COQlJ40j1DR7i0sev57JDn">".."</span>):
+        <span class="k" data-page-node-id="TsnEh9ZLqW1jWvStu7TMDx">raise</span> <span class="n" data-page-node-id="4JtreAYgH0uPNF7zzKUy7B">ValueError</span>(<span class="s" data-page-node-id="F5ZVIXOLsSmhv6G3PUWyEj">f"拒绝写入 outputs 之外的路径：{filename}"</span>)
+
+    name = <span class="s" data-page-node-id="w7EkfI3qX1pWrGW7M1vC0m">""</span>.join(c <span class="k" data-page-node-id="9vGCvMJEIrfB6Rt16It0lB">for</span> c <span class="k" data-page-node-id="WydNtESnjpxOkiJvFASMUi">in</span> raw <span class="k" data-page-node-id="Dh0uzgLuOUFJcCCnp0vJlw">if</span> c <span class="k" data-page-node-id="wFYkC1BQi7NT2vJxb4lmmv">not in</span> _ILLEGAL).strip()
+    <span class="k" data-page-node-id="nLhMBw1aXG41ZMooYeAXK3">if</span> <span class="k" data-page-node-id="7a5vo6iXzgGV2HOEyJu7A6">not</span> os.path.splitext(name)[1]:
+        name += default_ext
+
+    target = (OUTPUT_DIR / name).resolve()
+    <span class="k" data-page-node-id="zrPzmDeyGLJrhoNkYfMiTB">if</span> target.parent != OUTPUT_DIR.resolve():
+        <span class="k" data-page-node-id="NbLYCpXJsBJzdEm5awiKsQ">raise</span> <span class="n" data-page-node-id="GlHfm4H4w5xZuwXiJWTCtX">ValueError</span>(<span class="s" data-page-node-id="AR91XyuX0TI8mA5cINMC1w">f"拒绝写入 outputs 之外的路径：{filename}"</span>)
+    <span class="k" data-page-node-id="4SRQVVYz07tdlAOExbP0aJ">return</span> target</pre>
+    <div class="notes" data-page-node-id="HYoj9O6db6r9iubGxTS8H4">
+      <div class="note" data-page-node-id="U1Y8vyinl1WsNSb2Fm9xpN"><b data-page-node-id="ILRNpwi23e9p0styJWcAIz">为什么这么写</b>
+        <p data-page-node-id="9v9uQOQ7ChlQFTzawZAyPZ">这个 <code class="inline" data-page-node-id="WwXNdWlfvXB7nXkJQKSaHc">filename</code> 是模型生成的，属于不可信输入。它可能给你 <code class="inline" data-page-node-id="b6gxqbYfpTYlsfmFgbHXO4">../.env</code>。</p></div>
+      <div class="note teal" data-page-node-id="H2nALiGvT2T0BDQzjl05LI"><b data-page-node-id="eQi9wHVCP1q7YhnXHNutVb">为什么是报错，不是改名</b>
+        <p data-page-node-id="X040iMkDjecayzZP7qlEaV">初版用 <code class="inline" data-page-node-id="dPi6buEhQ8WTXlZplbepXm">basename()</code> 把 <code class="inline" data-page-node-id="DaGrv9wB4hsE7Up1CKQD8K">../evil.txt</code> 静默截成 <code class="inline" data-page-node-id="EaF7UBj3FdrzOXDqk6vdqq">evil.txt</code>：文件安全了，但模型以为自己写对了，汇报路径就是错的。报错它才能改参数。</p></div>
+      <div class="note" data-page-node-id="LoqZvzBZD4JmXiFAhC5Mny"><b data-page-node-id="zBCVoZtCJ7MThga3XBKptY">逻辑三步</b>
+        <p data-page-node-id="6xCzgvm2uGjt594uSgDF7b">剥前缀 → 拒绝任何目录层级 → <code class="inline" data-page-node-id="hC0glpCjrF6dS9HEDlh8Ht">resolve()</code> 后复核父目录（防符号链接和 <code class="inline" data-page-node-id="cOy2kuI9UNVIHJnCME84Gr">..</code> 绕过）。</p></div>
+      <div class="note warn" data-page-node-id="up3kZFl4NY80q3AUKtw0Bt"><b data-page-node-id="3B8CjQFX6NcMK3aPAcdiL7">用到的知识</b>
+        <p data-page-node-id="85iklaq8G9WNCzHbsuko5X"><code class="inline" data-page-node-id="PsFEukPFepUJbFt1AxZ8NL">pathlib</code> 的 <code class="inline" data-page-node-id="STZuPHKH3e1TpH0UuU9dW7">/</code> 拼接、<code class="inline" data-page-node-id="Q2iXZhUFyZIrQHIGHsbcUB">resolve()</code> 规范化路径、路径穿越、fail fast、不可信输入</p></div>
+    </div>
+  </div>
+  <div class="takeaway" data-page-node-id="87pEhdw2HbaCzFRlGVAvNi"><b data-page-node-id="YpJtVEEI06R3DOyn3hg7LP">一句话</b>：安全的做法不止一种，但「静默成功」对 Agent 最糟——它拿不到反馈，就会一直错下去。</div>
+</div>
+
+<div class="slide" data-page="04 / 13" data-page-node-id="NDGP2RuV7aL6v3aOCmfhrE">
+  <div class="kicker" data-page-node-id="jSJXEWOwyyepLYvCnkzDQs">代码 02 · agent/graph.py:43–55 · 编排层</div>
+  <h2 data-page-node-id="3oIykGo33LMGZxC5uyI0jv">四行代码，就是一个 agent ⇄ tools 循环</h2>
+  <div class="codegrid" data-page-node-id="e5fO0B4H2ire5WI8kHnFC8">
+    <pre data-page-node-id="wMLX0GZ99I49E1gL1XrkLa"><span class="k" data-page-node-id="w921aUFbgvcxGj9INP52fg">class</span> <span class="n" data-page-node-id="AfW5RaXIC1XxBvmxqu2syJ">AgentState</span>(TypedDict):
+    messages: Annotated[list, add_messages]
+
+builder = <span class="n" data-page-node-id="UZ95t0oBwfe8jD40PrvEoh">StateGraph</span>(AgentState)
+builder.add_node(<span class="s" data-page-node-id="FBXQgsDotuSIdhVep41ZCa">"agent"</span>, agent_node)
+builder.add_node(<span class="s" data-page-node-id="73KPiVutIdlD0KwNXgHkHr">"tools"</span>, <span class="n" data-page-node-id="Oq0pEGzM84rooClCHCNU7v">ToolNode</span>(ALL_TOOLS))
+
+builder.add_edge(START, <span class="s" data-page-node-id="ZpNehr334dmKMHWi0neinU">"agent"</span>)
+builder.add_conditional_edges(
+    <span class="s" data-page-node-id="DM16RJA0FPWh1J7v4U49Yj">"agent"</span>,
+    tools_condition,                       <span class="c" data-page-node-id="DwPuNvQHMenkgZdUwMazF7"># 有 tool_calls 吗？</span>
+    {<span class="s" data-page-node-id="cByJG6IAwYt2aLHIuWHIxZ">"tools"</span>: <span class="s" data-page-node-id="rwkGDGgjQw1HS9Q45qfTTu">"tools"</span>, END: END},
+)
+builder.add_edge(<span class="s" data-page-node-id="ZWzNlNRMpjlRnlbvhUAspm">"tools"</span>, <span class="s" data-page-node-id="lcD1WFLGjjhq1nZJjoVggq">"agent"</span>)          <span class="c" data-page-node-id="WG9dnAN7pEEYUKNMyYjNlX"># 执行完回到 agent</span>
+
+<span class="k" data-page-node-id="NKrhtbgAOJH8tuI67xEGKy">return</span> builder.compile()</pre>
+    <div class="notes" data-page-node-id="yjIkpY905pkxqjmweJLhdS">
+      <div class="note" data-page-node-id="GnMms04Y1WcmDFsvxrRtej"><b data-page-node-id="90yrrairS4FjJWkTnHZvfu">为什么不用 while 循环</b>
+        <p data-page-node-id="vYcSnwx7MqPlHqIQIYj6tv">自己写 <code class="inline" data-page-node-id="AehiOdeyvMafGxAvPbdLDS">while True</code> 要自己管退出条件，模型反复调工具会把进程跑死。框架自带递归上限和状态管理。</p></div>
+      <div class="note teal" data-page-node-id="USQFjyhplrS5wr7rezGBGf"><b data-page-node-id="HqEDHYDDkLWI8q0mJzuoiv">逻辑</b>
+        <p data-page-node-id="p9Ds9mpMBTx1rjwtRFPLBr">agent 产出 <code class="inline" data-page-node-id="UgdaMD30aE1SPD8hU0jwCh">tool_calls</code> → 条件边判断有没有工具要调 → 有就走 tools 执行 → 回到 agent 看结果 → 没有就 END。</p></div>
+      <div class="note warn" data-page-node-id="QD3jdX0LjyZy5lNNUF1tRc"><b data-page-node-id="2GUCoAsSoHi7lJWZjjhoiV"><code class="inline" data-page-node-id="zvolGzV0tI8X717f90hwl5">add_messages</code> 是关键</b>
+        <p data-page-node-id="gEpyTYjiR03mYMqR59LCBC">它是 reducer：新消息追加到历史，不是覆盖。没有它，每轮只剩最后一条消息，模型会「失忆」</p></div>
+      <div class="note" data-page-node-id="xNYBJplVIiRVC4bH3Gt5BK"><b data-page-node-id="WjWiMY77ydxxlImdPVHqSj">用到的知识</b>
+        <p data-page-node-id="PtZVyGU2gQotateQAuKSRU"><code class="inline" data-page-node-id="8s4y7HDn0I9L2eci5hKhm3">TypedDict</code> 类型标注、<code class="inline" data-page-node-id="jFGaTQCFVuPQzIe4oN6l62">Annotated</code> + reducer、有向图与条件边、ReAct 范式、编译期校验。</p></div>
+    </div>
+  </div>
+  <div class="takeaway" data-page-node-id="H04xai87SHGaQDRCBhXFED"><b data-page-node-id="wq2sn8NBo5MJuQ8LcuGYeA">一句话</b>：这张图本身就长成汇报用的架构图——代码结构和讲解结构是同一个东西，不用另外画。</div>
+</div>
+
+<div class="slide" data-page="05 / 13" data-page-node-id="VfD0aoaNVyKzuiq8pKhT7R">
+  <div class="kicker" data-page-node-id="xL7NCbyBEWH1pxuIcPBfxf">代码 03 · agent/prompts.py:89–113 · 编排层</div>
+  <h2 data-page-node-id="hDegxlNc78B7pSO4Cvo8xJ">技能不该常驻，命中触发词才加载</h2>
+  <div class="codegrid" data-page-node-id="zSU3q0PDweiRjFiPUoeYtS">
+    <pre data-page-node-id="UBr94pFByoczB6Gp8fKTwA">SKILL_TRIGGERS = (<span class="s" data-page-node-id="pVMdKOHt5AkXhI39yldjZq">"精读"</span>, <span class="s" data-page-node-id="uGZ4cC1AVUYsiRODmBNykA">"生词"</span>, <span class="s" data-page-node-id="95WK9VlSdZR3lB1BSYUc01">"词表"</span>, <span class="s" data-page-node-id="BOjsPoLByspabFRksJwv88">"练习"</span>,
+                  <span class="s" data-page-node-id="8Q6ixzJgQB1DlgDiWH1veM">"外刊"</span>, <span class="s" data-page-node-id="iGxtyPscWrsodkZPuGVsw6">"文章"</span>, <span class="s" data-page-node-id="Jl6881ESfjKQKpVckyXhsL">"worksheet"</span>, <span class="s" data-page-node-id="MwPyHSAyJBMm2zCkiSNSTu">"读一下"</span>)
+
+<span class="k" data-page-node-id="M0T3vfVyEksWGXHNY9w129">def</span> <span class="n" data-page-node-id="FzHMKddqD5j6LS0qU3bMYV">select_skill</span>(query: str) -&gt; str | <span class="k" data-page-node-id="JiI1Alpn6Ivxqq6RzlaGQD">None</span>:
+    <span class="k" data-page-node-id="hPpJwRJpe57ivJYd9G4jHT">if</span> <span class="k" data-page-node-id="av2ZgAK9HziJdcnYOAuCzP">not</span> query:
+        <span class="k" data-page-node-id="vmjHTJKO3aNsGel8SaYp4J">return</span> <span class="k" data-page-node-id="93XaaE1SUd2dNWrdbWUm5v">None</span>
+    lowered = query.lower()
+    <span class="k" data-page-node-id="hI4pPQMoxPGPip38Gkmowe">if</span> <span class="k" data-page-node-id="gn7NcQBITH7qoPYeEDtSgr">not</span> any(k <span class="k" data-page-node-id="OhjsxLsyN7jwjOUHjkJfCA">in</span> lowered <span class="k" data-page-node-id="U12aH3jIJ3CtwMj7E2IzoO">for</span> k <span class="k" data-page-node-id="hrQvUMd2KlHI2NJgMEj2XO">in</span> SKILL_TRIGGERS):
+        <span class="k" data-page-node-id="K4N0K7EbsIGrEjANyRDkpN">return</span> <span class="k" data-page-node-id="4bFyMbdIbd5xi1ETQULZOe">None</span>                      <span class="c" data-page-node-id="vDSldvWb0HWJnnFDu2H3AQ"># 没命中就完全不加载</span>
+    skill_file = SKILL_DIR / <span class="s" data-page-node-id="o6vvRYXSSZsBbdwvvCXiOP">"intensive-reading"</span> / <span class="s" data-page-node-id="3uZPMXJIAfWgURJgRNmzvF">"SKILL.md"</span>
+    <span class="k" data-page-node-id="5CnEiEBGWGErHP6td8wUTT">if</span> <span class="k" data-page-node-id="qTtZyV4kGqvIt7TRDYeQpd">not</span> skill_file.exists():
+        <span class="k" data-page-node-id="AoAVzwhdGIPHNRntMcFQWB">return</span> <span class="k" data-page-node-id="sdDexXxSsbqJM9buRdyJQJ">None</span>
+    <span class="k" data-page-node-id="2X2Vi4mJqmZjHSQJdnlnQZ">return</span> _strip_frontmatter(
+        skill_file.read_text(encoding=<span class="s" data-page-node-id="eKhAJ34TjhTEQW2JFp82E8">"utf-8"</span>)
+    ).strip()
+
+<span class="k" data-page-node-id="MxRSpOkOwTvxPFYJjA2XtI">def</span> <span class="n" data-page-node-id="SP6WTwHFV4iwJYsWYOBhaW">build_system_prompt</span>(query: str = <span class="s" data-page-node-id="ctBQwYVaQR4UAvJtMiVHvN">""</span>) -&gt; str:
+    exam = load_profile().get(<span class="s" data-page-node-id="1RsEqPyaNySmXXkX5qwnPb">"target_exam"</span>, <span class="s" data-page-node-id="zz8SId4Ea07eYFriZ0Yfbf">"CET-6"</span>)
+    prompt = SYSTEM_PROMPT.format(exam=exam, profile=_profile_block())
+    skill = select_skill(query)
+    <span class="k" data-page-node-id="pC0avSVOG0ACINdbsjtI6C">if</span> skill:
+        prompt += <span class="s" data-page-node-id="QTFxcrGODnDvtGFWS1crPi">"\n\n---\n\n## 已加载技能：外刊精读\n\n"</span> + skill
+    <span class="k" data-page-node-id="kIr0wbASqgOqlPWqEERxy6">return</span> prompt</pre>
+    <div class="notes" data-page-node-id="49xS4ell35SUWC8tCtS8qy">
+      <div class="note" data-page-node-id="J1BUeMh6taNeIUFUbPhV1l"><b data-page-node-id="qnQly0TGvldZ7WXaJk0oqT">为什么分层</b>
+        <p data-page-node-id="L2iPIbHGjylus7O1XmEmBa">常驻人设要短、稳定（约 1.9k 字符）；技能流程要长、可替换。混在一起会撑爆上下文，改流程还得动主提示词。</p></div>
+      <div class="note teal" data-page-node-id="t4G2bp1rUOvjp5DkMdYGTT"><b data-page-node-id="oQpkhwFg2ykIFDnekN3Qfv">逻辑</b>
+        <p data-page-node-id="zfE5RabciXeKnNk42DbJqi">模板占位填档案 → 命中触发词才读 <code class="inline" data-page-node-id="we0amQLXUhvkgSFBhrpWF3">SKILL.md</code> → 剥掉 frontmatter → 拼到末尾。</p></div>
+      <div class="note" data-page-node-id="EmA8lL5eS9iXq72iDLvOot"><b data-page-node-id="QEvbJyDdtDiFJANhngog7E">实测数字</b>
+        <p data-page-node-id="jiBogUSYSA0lqfMy94FZTj">相关请求注入 1717 字符；问「今天天气怎么样」完全不注入。<b data-page-node-id="Uh78KHZExqqmpyz5FqMoHk">没命中的部分一个字符都不占。</b></p></div>
+      <div class="note warn" data-page-node-id="J95VOFqBMiSpHkWpZcnGzi"><b data-page-node-id="7nGCAJqeAvZpxVimde43Kd">用到的知识</b>
+        <p data-page-node-id="DrvajGMlcSLRX38sgdiOPo"><code class="inline" data-page-node-id="hlliy0ep2DDLYCEpOnboUE">str.format</code> 模板、按需加载、Markdown frontmatter 解析、上下文窗口有成本</p></div>
+    </div>
+  </div>
+  <div class="takeaway" data-page-node-id="LPl08l4gNwcJ4jDVBo9svH"><b data-page-node-id="3lCMw8hI6R6E0Cd4fPMfsK">一句话</b>：加一个技能 = 加一个目录，主提示词一行不改。这就是 Skill 和系统提示词的本质区别。</div>
+</div>
+
+<div class="slide" data-page="06 / 13" data-page-node-id="4re5NzMvd2Dn7zg4zyc9vQ">
+  <div class="kicker" data-page-node-id="jjyKcjmH64ULMAjQiIXYDJ">代码 04 · tools/dictionary.py:22–30 · 工具层</div>
+  <h2 data-page-node-id="pZ3WMNSRspYQ0MaKy95tED">docstring 不是注释，是写给模型的说明书</h2>
+  <div class="codegrid" data-page-node-id="AGCAOoPTwiRP26CP7FadzF">
+    <pre data-page-node-id="i6NVeNayTiHvBOAk5eabkM"><span class="k" data-page-node-id="1YDgXGdLyh8TqQkhGUuQbG">from</span> langchain_core.tools <span class="k" data-page-node-id="ZPyCUXBms8KVV4VtksokaN">import</span> tool
+
+<span class="n" data-page-node-id="vysHQscKLBqWKG0t3yLZVa">@tool</span>
+<span class="k" data-page-node-id="aqhSH5IzzqsggoXwncLfm3">def</span> <span class="n" data-page-node-id="g40QuDAbXOgf04rr2a0Osu">lookup_word</span>(word: str) -&gt; str:
+    <span class="s" data-page-node-id="g4l5EqKADR74KzoDHo8pZR">"""在本地词库中查一个英文单词，返回音标、词性、
+    中文释义、例句和考纲等级。
+
+    参数 word 只传单个英文单词，不要带句子或标点。
+    如果返回 NOT_FOUND，说明该词不在本地词库中，
+    你必须明确告诉用户「这个词不在本地词库内，
+    释义来自模型推断，请自行核对」，不要假装查到了。
+    """</span>
+    key = (word <span class="k" data-page-node-id="eGQRUHaC7RIDFYekUXoBFI">or</span> <span class="s" data-page-node-id="uFgbk1pIDbMLmJY4oprzUF">""</span>).strip().lower().strip(<span class="s" data-page-node-id="a7p7bPhsOHBdDALuWNejAe">".,!?;:\"'()[]"</span>)
+    <span class="k" data-page-node-id="tm1PGQXc8ekSGWoQzP2bcR">if</span> <span class="k" data-page-node-id="6lXdHXQLwrRs5unTxA41lH">not</span> key:
+        <span class="k" data-page-node-id="oMY4CUAvQVcDr012CCCqbP">return</span> <span class="s" data-page-node-id="JIJtxY57SKixcVEsdTbXFa">"ERROR: word 参数为空。"</span>
+    ...</pre>
+    <div class="notes" data-page-node-id="RNbnvjHLgSkgHFnXoLoF9t">
+      <div class="note" data-page-node-id="IfC8a79q4b8N2PH6TAitpE"><b data-page-node-id="wmvNXtinEnq7C9H4EzofyT">装饰器做了什么</b>
+        <p data-page-node-id="8poA2SCI0TsduK8mEWUwFU"><code class="inline" data-page-node-id="amkIHa8MBStW44qejguUGC">@tool</code> 把普通函数包装成「模型可调用对象」：函数名变工具名，类型注解变参数 schema，docstring 变工具描述</p></div>
+      <div class="note teal" data-page-node-id="dq81iDdiX5RzV9yX4rCAZY"><b data-page-node-id="MUXO0HTT7K03JSqvuYwHzw">为什么 docstring 要写这么啰嗦</b>
+        <p data-page-node-id="XzFkRt9yzGnGbRG8FLqSwc">模型就是靠这段文字决定「什么时候调、参数传什么、拿到 NOT_FOUND 该怎么说话」，所以接口文档即提示词</p></div>
+      <div class="note" data-page-node-id="x0Z1g0a5FhxetG1CzVOfom"><b data-page-node-id="c3bvnHJwEbHGCwoplciS94">参数清洗</b>
+        <p data-page-node-id="fk3IpL6zT2N27u4CvFRQrf"><code class="inline" data-page-node-id="6Uj0U8Kby3InnlQdTPSwCZ">strip(".,!?;:\"'()[]")</code> 去掉模型顺手带上的标点——它常把 <code class="inline" data-page-node-id="qQtVi3lq3mHxKlSlIlUAvm">"emission,"</code> 整段传进来。</p></div>
+      <div class="note warn" data-page-node-id="LTErllJsHlPwEGSNPBZRG7"><b data-page-node-id="8bgGFwWIYP5FnsRIaMEPee">用到的知识</b>
+        <p data-page-node-id="jJ4GoCbibiK9TsVzDSz2DB">装饰器、类型注解 → JSON Schema、Function Calling 协议、<code class="inline" data-page-node-id="qAY4FpNFJYJHU7VKzTQiMf">str.strip</code> 的字符集参数。</p></div>
+    </div>
+  </div>
+  <div class="takeaway" data-page-node-id="WcdNbD2epN3ScbP1GalKNZ"><b data-page-node-id="UxfFudUC1tJmEwhkP71kqT">一句话</b>：工具描述含糊，模型就乱传参数或干脆不调。写工具说明，本质上是在做提示词工程。</div>
+</div>
+
+<div class="slide" data-page="07 / 13" data-page-node-id="DlB8HODYHQ1QIZsZfwmSaO">
+  <div class="kicker" data-page-node-id="IWIyzH23S6YIPYrq54IPm7">代码 05 · tools/lexicon.py:13–24 · 工具层</div>
+  <h2 data-page-node-id="JbEwJWdSfCoZXE9kVGCR9F">两个工具读同一份词库，判断标准只能有一个</h2>
+  <div class="codegrid" data-page-node-id="35L2kCFVIcYBJdJWkxKE4I">
+    <pre data-page-node-id="HyqFTkO3mcXFOikVSSb4VD"><span class="k" data-page-node-id="6GyHvTwY5pTe7yTCHmtFLc">from</span> functools <span class="k" data-page-node-id="8SMlZUuEF74yy2SRSxFK4V">import</span> lru_cache
+
+LEXICON_PATH = (Path(__file__).resolve().parent.parent
+                / <span class="s" data-page-node-id="ix5d62mQehLZ5YM2lDQCZ3">"data"</span> / <span class="s" data-page-node-id="HfhMEpTyOE8r6gNPlw7jnW">"lexicon.json"</span>)
+
+<span class="n" data-page-node-id="20Jq9ORqNYfzWC5YDnqpzM">@lru_cache</span>(maxsize=<span class="n" data-page-node-id="BdywJjU7ZkRBEke5YaPBu3">1</span>)
+<span class="k" data-page-node-id="wuhlGQaIh82EcrAjk6E1gz">def</span> <span class="n" data-page-node-id="mwysKsxB41gktmUegl2LiF">load_lexicon</span>() -&gt; dict:
+    <span class="k" data-page-node-id="L4qurNxUdBHzKZyqn4ZSNc">with</span> open(LEXICON_PATH, <span class="s" data-page-node-id="sKOhi55Z1ScDI5ybzcxzWc">"r"</span>, encoding=<span class="s" data-page-node-id="Bs3HwVKnheFbj8ZGmNLW5Q">"utf-8"</span>) <span class="k" data-page-node-id="ya18Moy9He7ANqGDVQCMGB">as</span> f:
+        <span class="k" data-page-node-id="zKM2E525tvZLESYBKFbAas">return</span> json.load(f)
+
+<span class="k" data-page-node-id="0wczmaLL6E51zzWqVo3D5b">def</span> <span class="n" data-page-node-id="feeiR4J8jADQ0vzVMP7qfx">lookup</span>(word: str) -&gt; dict | <span class="k" data-page-node-id="y4muSARV9ql22ReAmlS3PX">None</span>:
+    key = (word <span class="k" data-page-node-id="VOtRbCqM6aKnzHWxx3S5lD">or</span> <span class="s" data-page-node-id="hdnZAbXAecrdCCQuFw6mun">""</span>).strip().lower().strip(<span class="s" data-page-node-id="PgBIHD9trMyE6yIXlGajy5">".,!?;:\"'()[]"</span>)
+    <span class="k" data-page-node-id="rLOEcIwf9mD56QvIXJNEkF">return</span> load_lexicon().get(key) <span class="k" data-page-node-id="hw5aihL1WlObDrKAVlnaBh">if</span> key <span class="k" data-page-node-id="Rdw7H4EEqrzUDjT67QXKzB">else</span> <span class="k" data-page-node-id="n9yNERnLeJqRzNZwbNjGNE">None</span></pre>
+    <div class="notes" data-page-node-id="p7XJhcAAOY8WGxaS0sTneT">
+      <div class="note" data-page-node-id="tR3GxFQCRjfMdNWlooFlg1"><b data-page-node-id="Lj4eMOCj8PS8xkI4CVyuXT">为什么抽这一层</b>
+        <p data-page-node-id="mhvxrK16SierWi8EhBoAk6">查词工具和词表工具读同一份 JSON。如果各写一遍判断逻辑，就会出现<b data-page-node-id="kIHCGVm9ajSRVHqGt3gRSA">「查词说没收录、词表却给了 CET-6」</b>——模型顺手就把幻觉补圆了。</p></div>
+      <div class="note teal" data-page-node-id="AXKh4hFxeeqcve0ZPfTi43"><b data-page-node-id="MdgvvYvuTgO55o2VkgKaQN">逻辑</b>
+        <p data-page-node-id="jPfsuUqYBWT6HV5ZYe79rr">路径常量 + 缓存单例；两个工具都调 <code class="inline" data-page-node-id="VTzg2jFzDmw0csEE8sdFsk">lookup()</code>，「什么算已收录」只有一处定义</p></div>
+      <div class="note" data-page-node-id="1jPQTJLVmH836uWhJCCWyR"><b data-page-node-id="emLEFHlRWMLGPxGFEFcUxH"><code class="inline" data-page-node-id="IHgJesgx0vNjr7N8Q22jb3">lru_cache</code> 的作用</b>
+        <p data-page-node-id="TfpX57KKl5WL0BV3cybe6o">JSON 只读一次，后续命中内存缓存。主路径要查 8 次词，省 7 次文件 IO。</p></div>
+      <div class="note warn" data-page-node-id="sCV427Q2crL1x6c5VcfzhQ"><b data-page-node-id="qS3EldakDVH6FlGrcZvVUO">用到的知识</b>
+        <p data-page-node-id="cR1dlPK3eLEnFlGhOX51Bf">模块化、单一数据源 SSOT、记忆化缓存、<code class="inline" data-page-node-id="Wwv7BMTY5AsBNqiLaGJZ2u">__file__</code> 定位相对路径（不依赖启动目录）</p></div>
+    </div>
+  </div>
+  <div class="takeaway" data-page-node-id="FXNl3GZ7IkmkKuYAe8ZJ2M"><b data-page-node-id="mXd244kuUn85BCP0ABFyaO">一句话</b>：数据一致性靠的不是约定，是<b data-page-node-id="FH8bqhqPNJgUqwb0Du4r2B">只留一个入口</b>。两处各写一遍，早晚不一致。</div>
+</div>
+
+<div class="slide" data-page="08 / 13" data-page-node-id="5DifykEmddAzjEB8ymeSXu">
+  <div class="kicker" data-page-node-id="opP2IlgsGQhyYymkOyiJMK">代码 06 · tools/wordlist.py:68–83 · 工具层 · 全场最重要</div>
+  <h2 data-page-node-id="zfZ4ZmNNKCU60hn0BleAN9">模型编的考纲等级，用词库当场覆盖掉</h2>
+  <div class="codegrid" data-page-node-id="e3KijmGofw19soloOb60Of">
+    <pre data-page-node-id="AhyICLw0xytCF7eKCOGe1A"><span class="k" data-page-node-id="X6GqBIJBFwfYCUQqGqWkwl">def</span> <span class="n" data-page-node-id="0DpQjFLAzDJAglHml7Gkmu">_verify</span>(rows: list[dict]):
+    <span class="s" data-page-node-id="OHm1D3NWxf3tFXOUBDYnVi">"""拿词库复核每个词条的等级，返回
+    (行, 被纠正的词, 未收录的词)。"""</span>
+    corrected, unverified = [], []
+    <span class="k" data-page-node-id="FnH9X3zssqFosuWdO8GL7u">for</span> row <span class="k" data-page-node-id="yqeXO7W1z5b8sH6oTD4hGr">in</span> rows:
+        known = lookup(row[<span class="s" data-page-node-id="8msYXdwppy5mxIGCq8LYrP">"word"</span>])
+        <span class="k" data-page-node-id="S5O9FGN1y9Bw45Djw51Z5c">if</span> known <span class="k" data-page-node-id="kiAinDiMtZ3rWExGXQ17hd">is</span> <span class="k" data-page-node-id="MyzoKKWoLrki50Ezd61KTm">None</span>:
+            <span class="c" data-page-node-id="tZA8SvsElZAyPGBcmTchm7"># 查不到：不许猜，强制标未收录</span>
+            row[<span class="s" data-page-node-id="hZsB4TWwoylPCdRahuRuOm">"level"</span>] = UNVERIFIED      <span class="c" data-page-node-id="88yIHTpwGfGHEfxiCAXRaw"># "未收录"</span>
+            row[<span class="s" data-page-node-id="SYw2BWDpj4gQlH4F7Elcju">"source"</span>] = <span class="s" data-page-node-id="7cOAFgevYB0oLWI6u52Tek">"模型推断"</span>
+            unverified.append(row[<span class="s" data-page-node-id="maoGxxlKmbd1AwNvMp9gUl">"word"</span>])
+        <span class="k" data-page-node-id="lwdCE8g0168AWcpekjp1AW">else</span>:
+            <span class="c" data-page-node-id="7nZuvB8bhUUhi2C4aD9rth"># 查得到：用词库等级覆盖模型填的</span>
+            <span class="k" data-page-node-id="T7prNxkHrT8RQS1mVd2i55">if</span> row[<span class="s" data-page-node-id="4uH7but6gZRu4YXpng6ZnX">"level"</span>] <span class="k" data-page-node-id="BGhcpuX7NopShuAE31EOsj">and</span> row[<span class="s" data-page-node-id="HB2fop638qU9MAcXGe9MgG">"level"</span>] != known[<span class="s" data-page-node-id="yeQis7YelQiFCQui18376p">"level"</span>]:
+                corrected.append(row[<span class="s" data-page-node-id="ER35jl2M11dH5weNZTx4HN">"word"</span>])
+            row[<span class="s" data-page-node-id="uzuY9qAXr4whEFpCITpXGs">"level"</span>] = known[<span class="s" data-page-node-id="RthG0eKEEDd12ziP23FKGD">"level"</span>]
+            row[<span class="s" data-page-node-id="6GJmbSG52elH3lAVO2ChRG">"source"</span>] = <span class="s" data-page-node-id="YbbJ7c88sUcdTEsPiDbRDD">"本地词库"</span>
+    <span class="k" data-page-node-id="kEPSscQqC3xWMGwzDPKo1K">return</span> rows, corrected, unverified</pre>
+    <div class="notes" data-page-node-id="Kf02KkTGz1aBhbXhUXTPhV">
+      <div class="note" data-page-node-id="bd5UHXtC01V2QGsdq8PHsZ"><b data-page-node-id="V9Y9CjChJ7dJDXM2UJVlA7">起因是实测</b>
+        <p data-page-node-id="csKRGJF5GQkGcn27gcxfnG"><code class="inline" data-page-node-id="sHAJG10fZ5tkETcmI3LxiB">structural</code>、<code class="inline" data-page-node-id="IhI6XPsgCgoNW4WOnotDuj">enforceable</code> 查词返回 NOT_FOUND，模型仍然给它们填了 CET-6 等级，写进 CSV。</p></div>
+      <div class="note teal" data-page-node-id="DLaMh1dGZki0NulYw05TJk"><b data-page-node-id="xx4TO1Z2DxGJgMrqNl2kuy">为什么提示词拦不住</b>
+        <p data-page-node-id="Qnsv00neLkbMmXIF3rDbbh">我先在提示词里加了一句「不许编造等级」，重跑之后它还是编，所以只能把校验写进代码。</p></div>
+      <div class="note" data-page-node-id="VLmBJXZVGnC0ORmlDl0d4f"><b data-page-node-id="YG55RXkGVPGLmnOdgHDR8F">两个返回值都有用</b>
+        <p data-page-node-id="e9HE8uSv9LbZvDglhpn2Z1"><code class="inline" data-page-node-id="RBWyq2EVxaVDfa5k5jSjCw">corrected</code> / <code class="inline" data-page-node-id="FbHK9rI5CU3lS9gWkemmMl">unverified</code> 会回传给模型，它据此说出「含 2 个未收录词，建议核对权威词典」。</p></div>
+      <div class="note warn" data-page-node-id="z1o8sB0Ha1UKkueOi7ilWj"><b data-page-node-id="eJhprndc3PnIvwCDGHJ00R">用到的知识</b>
+        <p data-page-node-id="7tIcJmV2V91zsQYCNoyFLi">防御性编程、事实与生成分离、数据溯源（来源字段 → Word 标签）、返回值即约束</p></div>
+    </div>
+  </div>
+  <div class="takeaway" data-page-node-id="BAlwKZPRbqp4L2rb8i9dVB"><b data-page-node-id="22CRzkl4Nd3hEhYqJBL87K">结论</b>：<b data-page-node-id="OvfEqfqCF4aSqhTsQX70VA">模型的自我约束不是约束。</b>校验放在代码里，不靠它自觉——这就是「工具」存在的意义。</div>
+</div>
+
+<div class="slide" data-page="09 / 13" data-page-node-id="4BfwLSZMHdnLNuO85GWgzp">
+  <div class="kicker" data-page-node-id="1trfxdtwiMCaXgk8JIwtvu">代码 07 · tools/wordlist.py:25–63 · 工具层</div>
+  <h2 data-page-node-id="KvANftHpFXumnzdIXR6rDs">对格式错的输入太宽容，等于默许错误</h2>
+  <div class="codegrid" data-page-node-id="uswkYyQo8jlh8JAY19jwWP">
+    <pre data-page-node-id="odGF9e8L2tnDGswcWFBwNp">_SEP = re.compile(<span class="s" data-page-node-id="XGiD29JAJOHWI7GBdn7zzs">r"\s*[|｜\t]\s*"</span>)
+<span class="c" data-page-node-id="wedxuxhsq8M0UvPQEwgAZE"># 模型会把「来源」也塞进 entries，变成六列，位置全错</span>
+_SOURCE_HINT = re.compile(
+    <span class="s" data-page-node-id="nVHkUtqhBcqWp7DYDsX9aw">r"(\.json$|\.db$|\.csv$|^本地词库$|^模型推断$|^未收录$)"</span>, re.I)
+
+<span class="k" data-page-node-id="83KaER9webrT4bCQeJ1BlA">def</span> <span class="n" data-page-node-id="Lt25sMAvTseYxLyBg04dsO">_drop_source_field</span>(parts: list[str]) -&gt; list[str]:
+    <span class="k" data-page-node-id="I39xbqeZIzoFr69uj6zIKW">if</span> len(parts) &lt;= <span class="n" data-page-node-id="vj02wvkeIZQloQBC7t2D2v">5</span>:
+        <span class="k" data-page-node-id="KAnC6hAo1AaNrS31p5AVAS">return</span> parts
+    <span class="k" data-page-node-id="bkfcpCeagJBVKRVFICCTBd">for</span> i, p <span class="k" data-page-node-id="DAu1wUN6kFTJHfJM8F5X86">in</span> enumerate(parts):
+        <span class="k" data-page-node-id="HGcBes6yOm69Ho2w32nOPh">if</span> _SOURCE_HINT.search(p.strip()):
+            <span class="k" data-page-node-id="KdrmqlMzbfrfBdIGfUXtp4">return</span> parts[:i] + parts[i + <span class="n" data-page-node-id="o1LqSzJ4eYVlWyKGAlSroY">1</span>:]
+    <span class="k" data-page-node-id="quybhGlmkcJluCpmbZ84xH">return</span> parts[:<span class="n" data-page-node-id="7XuISfk7e7bQ7GPNE6TiXD">5</span>]
+
+<span class="k" data-page-node-id="fd71XF5XQd6JWg43JQ6Qlg">def</span> <span class="n" data-page-node-id="ODGCv3EY9ApFaWOJnJgs6q">_parse_entries</span>(entries: str) -&gt; list[dict]:
+    ...
+    parts = [p.strip() <span class="k" data-page-node-id="ommeuCHYRWQnYyrR7PxgJJ">for</span> p <span class="k" data-page-node-id="mrpemPQnMuZE0PSTfzIrKf">in</span> _SEP.split(line) <span class="k" data-page-node-id="pYQpw1KrxBxQA9GmURtOEc">if</span> p.strip()]
+    parts = _drop_source_field(parts)          <span class="c" data-page-node-id="TTXlaZxj00wJWvyJQKZs5S"># 先对齐列</span>
+    <span class="k" data-page-node-id="Ylub6BKFo2O3qYOFzM4xCn">if</span> len(parts) &lt; <span class="n" data-page-node-id="mDuZAIOeJti15BVIjI3w0z">2</span>:
+        <span class="k" data-page-node-id="zbzU74LCvOiNoisb85qcgq">continue</span>
+    ...
+    <span class="s" data-page-node-id="uTgjOd1ADilfOTUKJpsCAz">"example"</span>: parts[<span class="n" data-page-node-id="vCM4iFPslZLAosijXR3Bp4">4</span>] <span class="k" data-page-node-id="PAuIj2zT3oYAgIYIgGOw10">if</span> len(parts) &gt; <span class="n" data-page-node-id="44jfcVhkk1phpoOGNtYRvv">4</span> <span class="k" data-page-node-id="UZDtaXJdSYHb8iEPV0GoUR">else</span> <span class="s" data-page-node-id="A7HSBHRlFnPFl8mYnoEdnn">""</span>,</pre>
+    <div class="notes" data-page-node-id="2UWy5j450lYhLMzZCJoQ5h">
+      <div class="note" data-page-node-id="KRnKtbEj2EJFPgis8iuGiN"><b data-page-node-id="4Kyif8u5EQSEz9z3d3tqbY">这个 bug 是我自己引入的</b>
+        <p data-page-node-id="NnH9LJPWUOV82NA1RNdINz">我给工具返回值带过 <code class="inline" data-page-node-id="aQadzECU5LRYjplxD5YcaM">source</code>（来源）字段之后，模型下次就把 source 也塞进 <code class="inline" data-page-node-id="m3vBvSYMXkzlpuTiBzY0KG">entries</code>：六列，例句被挤到第六位。</p></div>
+      <div class="note teal" data-page-node-id="RarAYQ9jf7OeNaUj9ZPp8m"><b data-page-node-id="5oYol3IYg0hhce66CfdDYI">后果很隐蔽</b>
+        <p data-page-node-id="zKtuNLC22gY81L061HPhkE">被 <code class="inline" data-page-node-id="wApEo0W2prmilDgBevgbna">parts[:5]</code> 静默丢弃后，CSV 的 <code class="inline" data-page-node-id="wSKI3IW7KigoCKzqegi9eu">example</code> 列全变成 <code class="inline" data-page-node-id="jmf5ks8kI464gSdWmsEVhR">data/lexicon.json</code>。<b data-page-node-id="y4s7S4yzmdevZ0PKFt9HPK">不报错，但数据全错。</b></p></div>
+      <div class="note warn" data-page-node-id="88gPG1VXd8cJjB77pK3uky"><b data-page-node-id="GHLDSK6IL2tcAlvUiFChAl">踩坑记录：<code class="inline" data-page-node-id="ovG5Fdan0UAMAkgcC5m6JY">match</code> vs <code class="inline" data-page-node-id="MoIHVanZHPZ2WAZ7OfFd5V">search</code></b>
+        <p data-page-node-id="OEcqnANixIvvRGNHJhwwaR">初版用 <code class="inline" data-page-node-id="aiKBweLqaRvlyjkHreGR3b">re.match</code> 匹配 <code class="inline" data-page-node-id="e4Fk0j3Nn9hWLCNj5WSB6a">\.json$</code>，永远失败——<code class="inline" data-page-node-id="VP7leapsn4bZhjDUDsxs20">match</code> 只从开头比，必须改用 <code class="inline" data-page-node-id="BOQCDMSBsUzZUkUbZGCKHF">search</code>，已加回归测试</p></div>
+      <div class="note" data-page-node-id="AyqI1H4HX4D1cJFhv9knC4"><b data-page-node-id="7kiPkffCjscnk8SJ6zq33H">用到的知识</b>
+        <p data-page-node-id="CXrU2jBSgAEXCCBCrJdEcS">正则锚点 <code class="inline" data-page-node-id="h92rQEm80qPWMNa0njnD25">$</code> 与分组、<code class="inline" data-page-node-id="lB101ETi6VEZJ4aJyycSBS">re.escape</code>、字段位置协议、静默截断的危害</p></div>
+    </div>
+  </div>
+  <div class="takeaway" data-page-node-id="6wUSgcDKhEpJhOxED76k8f"><b data-page-node-id="hXiP2flwO3y6MctaUGVmpj">一句话</b>：工具的返回值会改变模型的下一次输入——加一列 <code class="inline" data-page-node-id="sBpch9jLlQHFZ34k91sSl9">columns</code>，就可能多出六列 entries。这是闭环里必须防的地方。</div>
+</div>
+
+<div class="slide" data-page="10 / 13" data-page-node-id="0N7cxGKKEXeSCKWe7XjLeg">
+  <div class="kicker" data-page-node-id="6YfbucC5epYNJaBUpJJvLG">代码 08 · tools/worksheet.py:22–44 · 工具层</div>
+  <h2 data-page-node-id="CCMOC2yUGhBJ9crytv9Qg5">原文里的 mitigating，也要能被挖空</h2>
+  <div class="codegrid" data-page-node-id="9pYLkb7TmODeCi1XXDD02Y">
+    <pre data-page-node-id="WGQACU7jmnJ4DlhbpN208h"><span class="k" data-page-node-id="jnJlLFA8OP3YzGA6EB5QVV">def</span> <span class="n" data-page-node-id="ErhAqZpvRDtUPGHbRXJEYY">_word_pattern</span>(word: str) -&gt; re.Pattern:
+    w = word.strip().lower()
+    forms = {w, w + <span class="s" data-page-node-id="zSyD3OBqH0XSw2vmiz1xaW">"s"</span>, w + <span class="s" data-page-node-id="YMEADBlxYLSJhIpc9L0COt">"es"</span>, w + <span class="s" data-page-node-id="05HcDHfRz7GYRxGFCLKGUG">"ed"</span>, w + <span class="s" data-page-node-id="1iOSNSCR0KrW7TA0EBdvt2">"d"</span>, w + <span class="s" data-page-node-id="MWOypRFWeh62p7Q2Er8Kke">"ing"</span>}
+    <span class="k" data-page-node-id="jUuaNcVrWXY4iz1LAFw6j5">if</span> w.endswith(<span class="s" data-page-node-id="UyTzBkVAUUzgPEccLIVnCv">"e"</span>):
+        <span class="c" data-page-node-id="m9jFCeWxVWLz5oynTHxd2F"># mitigate -&gt; mitigating / mitigated</span>
+        forms |= {w[:-<span class="n" data-page-node-id="7Cg4XIFlyqxxMS8LBMHWwq">1</span>] + <span class="s" data-page-node-id="TeLQmNIol5mEVOzAfHcz2a">"ing"</span>, w[:-<span class="n" data-page-node-id="ZLG0H6bvPwB90ZX93axFd3">1</span>] + <span class="s" data-page-node-id="MWtq3u2NU2jJDNccB8NdAr">"ed"</span>}
+    <span class="k" data-page-node-id="IEQ314E1QD6jyENGe4rXt7">if</span> len(w) &gt; <span class="n" data-page-node-id="jefNqnouvxaQaOXubBhtLb">2</span> <span class="k" data-page-node-id="8JBwdSP5eghJFlPTakFmDh">and</span> w.endswith(<span class="s" data-page-node-id="bKlI0YgBRysKND0cNBurTg">"y"</span>):
+        <span class="c" data-page-node-id="C0QMikPHK2m6A8X0sP8mEJ"># quantify -&gt; quantifies / quantified</span>
+        forms |= {w[:-<span class="n" data-page-node-id="EmLhDRJBc1IuplpJBCv1hK">1</span>] + <span class="s" data-page-node-id="Gyg2tWpg2azHECe7NluVna">"ies"</span>, w[:-<span class="n" data-page-node-id="foT5SOBYGzYR27l5zXpFC8">1</span>] + <span class="s" data-page-node-id="c8VvDONgt6HG4p5tpmysp1">"ied"</span>}
+    alts = <span class="s" data-page-node-id="00hGsnBSTq2jaVons4vIFL">"|"</span>.join(sorted(
+        {re.escape(f) <span class="k" data-page-node-id="s1xWUvejmobMLtRToVj6x2">for</span> f <span class="k" data-page-node-id="nokZd96NEYG82oF5gLEgZ6">in</span> forms},
+        key=len, reverse=<span class="k" data-page-node-id="WX4IilNOMAMoArrHUyn5IF">True</span>,
+    ))
+    <span class="k" data-page-node-id="iStjfJXTQCHo3i8DxAjhSd">return</span> re.compile(<span class="s" data-page-node-id="WHs3kkQmTrrATFBBIwn3nT">rf"\b(?:{alts})\b"</span>, re.IGNORECASE)
+
+<span class="k" data-page-node-id="BjOXjqDl4UquAl8kXdftO9">def</span> <span class="n" data-page-node-id="VNZc6nGqOzcxwFiMsvXZdu">_mask</span>(text: str, words: list[str]) -&gt; tuple[str, int]:
+    hits = <span class="n" data-page-node-id="0s22Rtg8ms7jfxoHKbKJv2">0</span>
+    <span class="k" data-page-node-id="2RUb93l9jOUD51NbihRJGx">for</span> w <span class="k" data-page-node-id="Z5gGCBpt4iNk5z1V16J4vi">in</span> sorted({x <span class="k" data-page-node-id="fLxHFWajL2C1JYk4Gga0mn">for</span> x <span class="k" data-page-node-id="ODeKjRJEatP6L693HIdP6c">in</span> words <span class="k" data-page-node-id="CA5rq53jMTe7ZniK2zXLGV">if</span> x},
+                      key=len, reverse=<span class="k" data-page-node-id="10mzx0ILnszpIDJGDSfjqU">True</span>):   <span class="c" data-page-node-id="tRXQIzS93VT1Y1FFB3Ud0Q"># 长词先替换</span>
+        text, n = _word_pattern(w).subn(<span class="s" data-page-node-id="0WrDgrA9ybvtASB2WOBVOk">"______"</span>, text)
+        hits += n
+    <span class="k" data-page-node-id="gtTnRuVnMaCPWYp4kvce16">return</span> text, hits</pre>
+    <div class="notes" data-page-node-id="88T8PeZkDKvIZGFLu2h7sK">
+      <div class="note" data-page-node-id="WmrQOvDway7wbBjgjYoviA"><b data-page-node-id="IBqZyKfd9LjWFym2rGnm3G">为什么不能只加后缀</b>
+        <p data-page-node-id="FSrGJNe7Uq73a2hhO4xlGy"><code class="inline" data-page-node-id="R2gzGTfSYizUbU0JzdIsUG">mitigate + ing</code> 是错的，要去 e；<code class="inline" data-page-node-id="QaO8XLfpcXWCIL45aBG01c">quantify + ed</code> 也错，要变 ied。漏掉这两条，原文里的变形就挖不到。</p></div>
+      <div class="note teal" data-page-node-id="sORxtpIbAOkd8FInHNddi5"><b data-page-node-id="qexvsvS8hrn5Ye6UjGLNuY">为什么按词长降序</b>
+        <p data-page-node-id="YE1Hzs5l1AqHRGuVEAWcbl">短词先换会吃掉长词：<code class="inline" data-page-node-id="jKgGSFQXjt6qjUilH675HL">emit</code> 会把 <code class="inline" data-page-node-id="vggFBV7PMGzFMPI5mW06Ix">emission</code> 的前缀换掉，剩下残句，所以长词优先</p></div>
+      <div class="note" data-page-node-id="cZpFlJob2QcFeqBAbSgeXR"><b data-page-node-id="JJYTIYDjMPE6TjWK0ZYig4"><code class="inline" data-page-node-id="CtOqYI88svNQyly9yAQLW1">\b</code> 和 <code class="inline" data-page-node-id="3ZAVkMbx5ztuaTOb2tYJqt">subn</code></b>
+        <p data-page-node-id="hgio7bB1080DsZ2KVjFMXI"><code class="inline" data-page-node-id="UpYXKN919t1R4bZDFiGj70">\b</code> 卡词边界，避免 <code class="inline" data-page-node-id="dKgJKWw7bQnsdu8OqAzUFB">emit</code> 命中 <code class="inline" data-page-node-id="aVYAvyrKsARuTNCX1ev0fV">emitter</code> 中间；<code class="inline" data-page-node-id="FU9oK2bhJgimgI41FQ2mT3">subn</code> 顺手返回替换次数——就是「挖了几处」。</p></div>
+      <div class="note warn" data-page-node-id="7OTYBGmUauoEFQUtj0QBbb"><b data-page-node-id="JFnvvWYMEr59TCcb7qzgtf">用到的知识</b>
+        <p data-page-node-id="hbj1ZTHHMzqXKMk4DgUac1">正则 alternation、词边界、<code class="inline" data-page-node-id="SacH23sRrzfsr0mmPJpWBq">re.escape</code>、集合去重与排序、<code class="inline" data-page-node-id="F8CvW0DZCbv0YR6u7R9orj">subn</code> 的双返回值。</p></div>
+    </div>
+  </div>
+  <div class="takeaway" data-page-node-id="TeWIvDDp3zRaReFokdNit9"><b data-page-node-id="64bvnKWF0tDnDrcVlNq9fp">一句话</b>：8 个词挖出 8 处，但有时 8 个词挖出 11 处——一个词可能在文中出现多次，那个数字就是 <code class="inline" data-page-node-id="NJSFFKB0lzCF2yF8oKyfWD">hits</code> 累加出来的。</div>
+</div>
+
+<div class="slide" data-page="11 / 13" data-page-node-id="Z5IO0WqGGZJT4eFnsKtoQ5">
+  <div class="kicker" data-page-node-id="IU60crVK2EwPQ5MmyNjbCj">代码 09 · tools/memory.py:135–225 · 工具层</div>
+  <h2 data-page-node-id="g1ySGPt42Vs9AXrHybBssg">记忆要落成文件，复习日期要由代码算</h2>
+  <div class="codegrid" data-page-node-id="JRXz4IhiUdfcfCu5PaFEz1">
+    <pre data-page-node-id="gCJ55j9w8v8cTGdR5PGIej"><span class="k">for</span> w <span class="k">in</span> fail_words:
+    _mark_fail(book[w])   <span class="c"># 间隔归 1 天、系数 −0.2、明天重来</span>
+<span class="k">for</span> w <span class="k">in</span> pass_words:
+    _mark_pass(book[w])   <span class="c"># 系数 +0.05、1 天 → 3 天 → 上次 × 系数</span>
+
+schedule = {m[<span class="s" data-page-node-id="pAoxLroyrZamdwjnNYZwOG">"word"</span>]: {
+    <span class="s">"due"</span>: m[<span class="s">"due"</span>], <span class="s">"interval_days"</span>: m[<span class="s">"interval"</span>],
+    <span class="s">"ease"</span>: m[<span class="s">"ease"</span>], <span class="s">"reps"</span>: m[<span class="s">"reps"</span>],
+} <span class="k">for</span> m <span class="k">in</span> profile[<span class="s">"mistakes"</span>] <span class="k">if</span> m[<span class="s">"word"</span>] <span class="k">in</span> fail_words
+                                   <span class="k">or</span> m[<span class="s">"word"</span>] <span class="k">in</span> pass_words}
+
+<span class="k">return</span> json.dumps({
+    <span class="s" data-page-node-id="QsiQ95FdAcD6i1paViuDZ7">"schedule"</span>: schedule,      <span class="c"># 日期由代码算，模型只能抄</span>
+    <span class="s">"due_today"</span>: due_today,    <span class="c"># 今天该复习哪几个</span>
+    <span class="c" data-page-node-id="VuSqR3pBd7eWK829skcGo8"># 提示词里的档案是「本轮开始前」的快照，</span>
+    <span class="c" data-page-node-id="BshQMyP0ll6zrH9SzWBJfQ"># 模型拿旧快照报次数会慢一格（实测报 4、实际 5）</span>
+    <span class="s" data-page-node-id="FNw7exBHgmI92q8YvLpTR8">"counts"</span>: {m[<span class="s">"word"</span>]: <span class="k">int</span>(m.get(<span class="s">"count"</span>, <span class="n">1</span>))
+               <span class="k">for</span> m <span class="k">in</span> profile[<span class="s" data-page-node-id="cadeapYGPzNkL33ABrdn8n">"mistakes"</span>]},
+    <span class="s" data-page-node-id="BID0Si6ARsEyESamZnMYm7">"integration"</span>: <span class="s">"仅写入本地 JSON 档案；没有接入任何 App…"</span>,
+    <span class="s" data-page-node-id="fGUnYwHMwpd6ZF9p000i1E">"reply_rule"</span>: <span class="s">"只能引用 due，不许自己说「七天后」…"</span>,
+}, ensure_ascii=<span class="k">False</span>)</pre>
+    <div class="notes" data-page-node-id="34y8GD3j28vfN277EBamua">
+      <div class="note" data-page-node-id="i0URzbMGnkHg5939oFOilw"><b data-page-node-id="QORXxGSDHVhFDa0Q8AW3l6">什么是长期记忆</b>
+        <p data-page-node-id="Y23NaXMaHm2ef0UhZ0Zfk4">不是「模型记住聊天」，而是落成一份可读、可改、可版本管理的 JSON。下次会话拼进提示词，它就知道你上次栽在哪。</p></div>
+      <div class="note teal" data-page-node-id="DZNYdj1Pny0o6WWJBqQpCb"><b data-page-node-id="VXo3kaw3nGqIQd0qgeOtJm">为什么要排「下次哪天复习」</b>
+        <p data-page-node-id="dZdiyJ5RNnbWjk41VRLlEl">只记「错了 3 次」没用。同类软件真正的护城河是「这个词该在哪天重新出现」。所以每个词多四个字段：<code class="inline">interval / ease / reps / due</code>，递推在 <code class="inline">_mark_pass()</code> 里。</p></div>
+      <div class="note" data-page-node-id="SmaRZpuPGHlEtsGV6NU73h"><b data-page-node-id="6uokETmJjNyo61Sl3JGQFj">为什么日期和次数都要回传</b>
+        <p data-page-node-id="JeS8Y3JKblLoHJT0hCS5ro">提示词里的档案是本轮开始前的快照，模型拿它推算会慢一格；日期更是它最爱的自由发挥区，实测会顺口说「七天后」。<b>把算好的真值交给它，它只剩抄这一件事可做。</b></p></div>
+      <div class="note warn" data-page-node-id="b2SBc31ExeDHUr0ramspsV"><b data-page-node-id="HDcwWLC8mAKg7LUsAVaaBP">用到的知识</b>
+        <p data-page-node-id="5GUwfdUVPqYGsr2SWZnMjE">JSON 持久化、日期运算（<code class="inline">timedelta</code>）、间隔重复（SM-2 的简化版）、幂等与计数、排序键（负数实现倒序）、快照与实时值</p></div>
+    </div>
+  </div>
+  <div class="takeaway" data-page-node-id="lPQrW9nZTQjbnQM9SMC3ft"><b data-page-node-id="vwluRDLmyX9dw4dcEEz8kQ">一句话</b>：返回值不只是数据——它既<b data-page-node-id="vANAH65igf04HjRjET1qN3">约束模型怎么说话</b>，也把「什么时候该复习」从模型的推测变成代码算出来的事实。</div>
+</div>
+
+<div class="slide" data-page="12 / 13" data-page-node-id="ftixh21Bmhivtxw3GvSV0g">
+  <div class="kicker" data-page-node-id="maImEpP1Q3lF5IGAQnwUA1">代码 10 · app.py:105–133 · 界面层</div>
+  <h2 data-page-node-id="STkRr8qHTZFubqLsACKmt5">用生成器，让工具调用一步一步长出来</h2>
+  <div class="codegrid" data-page-node-id="GTT00ELX8KyRqkeAsH5aSP">
+    <pre data-page-node-id="ZmhLUzWDn3KJoVnL3xgJb4"><span class="k" data-page-node-id="9OH4GSxX6GRMMMJ0s8FcPh">for</span> update <span class="k" data-page-node-id="K600mizBegFiUlxnWBnmRL">in</span> graph.stream(
+    {<span class="s" data-page-node-id="zgXVLBxg53yevPsHL25k8F">"messages"</span>: lc_messages},
+    config={<span class="s" data-page-node-id="AkbreUJfht1F01OMNttmCm">"recursion_limit"</span>: RECURSION_LIMIT},
+    stream_mode=<span class="s" data-page-node-id="G1JSKmkEtdQD43HvuJ4dM5">"updates"</span>,          <span class="c" data-page-node-id="uZDc77ptal4JKhmRBN3CMu"># 每次只吐增量</span>
+):
+    <span class="k" data-page-node-id="U2i8eDBnN5AKIWbF81hduQ">for</span> node, payload <span class="k" data-page-node-id="HITmBbVtbSsH4nfnBX3rw6">in</span> update.items():
+        msgs = (payload <span class="k" data-page-node-id="Mh6AeNM5xKRAtkxwBaof0K">or</span> {}).get(<span class="s" data-page-node-id="2B4Exmyntm7YLrscqkrFj8">"messages"</span>) <span class="k" data-page-node-id="DG9qGdygTmdtSZgBtcPdz2">or</span> []
+        <span class="k" data-page-node-id="UvLwhrBw7J9N4vkhrqhkDx">if</span> node == <span class="s" data-page-node-id="HG09MeEmS5qFLQzLd2WeYn">"agent"</span> <span class="k" data-page-node-id="rMsKO8ci0DGQWKZlkQY4XR">and</span> msgs:
+            msg = msgs[-<span class="n" data-page-node-id="DxRmFh9AUWcK9oAbCK6SOs">1</span>]
+            calls = getattr(msg, <span class="s" data-page-node-id="bDOH5wbsBUHxc3pstsu2CT">"tool_calls"</span>, <span class="k" data-page-node-id="bDwCeIlNGtZ4NrR4LNCIkn">None</span>) <span class="k" data-page-node-id="y0rbkXmbvmKztkCfQgLEcq">or</span> []
+            <span class="k" data-page-node-id="mUjIJDjRuGIRQkJzFTJFnj">for</span> call <span class="k" data-page-node-id="HR3JNbjVedrKVZWIcBs0kr">in</span> calls:
+                args = json.dumps(call.get(<span class="s" data-page-node-id="2xShgvSJ6m0OAkCWTh8GLd">"args"</span>, {}),
+                                  ensure_ascii=<span class="k" data-page-node-id="2sfIDP0N55tOpTmH4QUVOb">False</span>)
+                <span class="k" data-page-node-id="lGCqmZrYtNiHe9bElRXdd9">yield</span> (<span class="s" data-page-node-id="w4DS11nrTmktSC6AXQxYVu">"call"</span>, call.get(<span class="s" data-page-node-id="FLoyZmEhhjqjvJ0NCg7uJX">"name"</span>), args)
+            <span class="k" data-page-node-id="LAsoN22CtzOW7KqsFiKWer">if</span> <span class="k" data-page-node-id="EEE6bnZww07BZdWV8mlqxc">not</span> calls <span class="k" data-page-node-id="AQ48IuW1Ds885dVJipy9lI">and</span> msg.content:
+                final_text = msg.content
+        <span class="k" data-page-node-id="bwnR8rm2xjxrxntbd7iBuP">elif</span> node == <span class="s" data-page-node-id="fWmn1KoZcOWXHxdxbAi9bl">"tools"</span>:
+            <span class="k" data-page-node-id="sDuOfGN5yAh4GyQ3CXt4Qp">for</span> m <span class="k" data-page-node-id="GqtqzmDsow4mqBT41tJiDR">in</span> msgs:
+                <span class="k" data-page-node-id="YdGjHF3fRDxge2w51pIIqQ">yield</span> (<span class="s" data-page-node-id="t3YgVKCTBgM61FCrOR61uj">"result"</span>, m.name, clip(m.content))
+
+<span class="k" data-page-node-id="2L3xCuN8jbsP87voJBwS1u">yield</span> (<span class="s" data-page-node-id="C0zPtET4qNImpgYoIsNYHb">"final"</span>, final_text <span class="k" data-page-node-id="PmL8l9CBEQOtJ4LNTqSG9v">or</span> <span class="s" data-page-node-id="gLYfQXQ1jyyhTHEBC9AIZI">"（这一轮没有返回文字…）"</span>)</pre>
+    <div class="notes" data-page-node-id="rtPOhISoqJLY6ATyeSHU6q">
+      <div class="note" data-page-node-id="dPmWewDpEtHNc8xAH3nS96"><b data-page-node-id="QggYHDS0pj5xNQQYxE2rAc">为什么要这样写</b>
+        <p data-page-node-id="RTssGoRNglTB8QTQYzJhhJ">商业 App 是黑盒推荐。这里要把每一步摊开，让「工具真的被调用」看得见，而不是模型凭空说话。</p></div>
+      <div class="note teal" data-page-node-id="anfOnQiuDiwVouKdQC2u49"><b data-page-node-id="2lIduJfXo27fWJxvTw7BGI">生成器的好处</b>
+        <p data-page-node-id="Uc13lQL9ePtbRyA8417BEz">函数一 <code class="inline" data-page-node-id="W1paQBwl6cm1li8nNl96LG">yield</code>，调用方就能立刻渲染，不用等全部跑完。12 次工具调用 = 12 次界面刷新。</p></div>
+      <div class="note warn" data-page-node-id="1XZYfDgt6AILKJWstXqTKe"><b data-page-node-id="xy2KUzL3gnQUTmbeFVpRkA"><code class="inline" data-page-node-id="5YYFbl75qP88bKEX5rp6Le">recursion_limit</code> 的坑</b>
+        <p data-page-node-id="rWSkpthy6F96chPPHaTsXu">一次工具调用占 2 步（agent 一步、tools 一步）。主路径 12 次调用 = 24 步以上（实测 16～25 步），原来设 15，跑到第 7 次就抛 <code class="inline" data-page-node-id="wPHncZIaKgYBnCsNGeggzj">GraphRecursionError</code></p></div>
+      <div class="note" data-page-node-id="NmjONEH1fGJVGQX8sM2moe"><b data-page-node-id="yfm8HeAXIirRDIVzpAK1c1">用到的知识</b>
+        <p data-page-node-id="mCZECryZCkvgjaNt26tBal">生成器与 <code class="inline" data-page-node-id="etpJi9apgHsIDwgwwA4fVL">yield</code>、迭代协议、<code class="inline" data-page-node-id="tr7ThfOyur39BLpKbypLKe">stream_mode</code> 增量 vs 全量、事件驱动 UI。</p></div>
+    </div>
+  </div>
+  <div class="takeaway" data-page-node-id="2qEIPnmpv4drhtjsOkVKhJ"><b data-page-node-id="aW5fzVrrA8bHte7qAjcPkE">一句话</b>：这个 bug 只在界面上出现，命令行测不出来——因为命令行测试用的是 limit=60。<b data-page-node-id="chhnEYKpmWaWvG1s4OxD2d">换了入口就要重测。</b></div>
+</div>
+
+<div class="slide" data-page="13 / 13" data-page-node-id="pGH17rO5pqgFvx29aChVGU">
+  <div class="kicker" data-page-node-id="JOBibr3BiWRhtsDNThh1FL">收束</div>
+  <h2 data-page-node-id="iNPQHyNqyhpwAZdTH4W1oM">十段代码，共用一条判断</h2>
+  <div class="rule" data-page-node-id="S342AuK3FS3VYRRBeGa4YK"></div>
+
+  <div class="grid g2" style="align-content:start" data-page-node-id="QbruE0GPJJaBroYvMUJkHH">
+    <div class="card" data-page-node-id="AJPDAOSdWbqzVLCv1ku53i">
+      <h3 style="font-size:16px;margin-bottom:8px" data-page-node-id="CUqsseelze71lb1wBjGQFc">按知识类型归类</h3>
+      <table data-page-node-id="IwWjXYsK5KXlZXqvP743Ct">
+        <tr data-page-node-id="H4dzgXSyCpC72MlA5a2W5f"><td style="width:84px" data-page-node-id="LsTfPgG9UySD706QBcOLxf"><b data-page-node-id="xby12U2xKiLKatK7wCKENW">语言基础</b></td><td class="small" data-page-node-id="J5Ef8ZoIjVm7pky1PLrVWB">装饰器、生成器、类型注解、<code class="inline" data-page-node-id="rCt3Tn6uT9bP7DmSb2BwPG">functools</code>、<code class="inline" data-page-node-id="xbic90gx49tQ4kKhU8bm7a">pathlib</code></td></tr>
+        <tr data-page-node-id="rrWojRFppM5ZJFIgcOwLpu"><td data-page-node-id="DhTVisnTkE8fP6z5MwUmd2"><b data-page-node-id="LHPJfhfROIH87UaaOpoFtg">数据处理</b></td><td class="small" data-page-node-id="XxpH2X6p1fODM7LMwPN36G">JSON 持久化、CSV 编码（<code class="inline" data-page-node-id="W0miAJ50Hxdz9FS7DPJTVf">utf-8-sig</code>）、正则与词边界</td></tr>
+        <tr data-page-node-id="Hn4XokmE6EIDYVKhLRqToQ"><td data-page-node-id="ybNDQdgnqxhBPRIJkJfKbY"><b data-page-node-id="P9WkunZ3lEYgnyKyFCcukW">工程习惯</b></td><td class="small" data-page-node-id="wBl0SaycdOcckuACF0Aosb">不可信输入、权限最小化、fail fast、单一数据源、缓存</td></tr>
+        <tr data-page-node-id="ZWQuyN2JNMUSvuR6g0QHIh"><td data-page-node-id="Nc55QSeOsDeAXiU0r3om2v"><b data-page-node-id="ZD8Je7T6MDN5Zkb42VCE9E">Agent 层</b></td><td class="small" data-page-node-id="cEqv8mzVlwEitSNEEkJLqL">状态图、Function Calling、上下文分层、按需加载、记忆</td></tr>
+      </table>
+    </div>
+    <div class="card" style="background:var(--accent-soft);border-color:#c9dcff" data-page-node-id="b8IZ7rkhh7g899g1fWhHgo">
+      <h3 style="font-size:16px;margin-bottom:8px" data-page-node-id="PAnnFonZbDMsMLDMUPd3AR">如果重做，我会改三处</h3>
+      <p class="small" style="margin-bottom:7px" data-page-node-id="r5xYnYh8LDZvEGupXEtzdZ"><b data-page-node-id="1JmCSpm6c35KdABTRCFgme">① 词库换真实词典 API</b>　6161 条考试词表够撑住大部分，但派生词（retrieval / coherence）仍查不到，只能退回「模型推断 + 标注」。</p>
+      <p class="small" style="margin-bottom:7px" data-page-node-id="mkIEzbcC1m7OPaF8IqHsOH"><b data-page-node-id="MvzjCPGQZEh277k0LFxw9g">② 工具参数用 JSON 而非竖线</b>　竖线省了模型输出，却引出了「六列挤位」那个 bug。</p>
+      <p class="small" data-page-node-id="rPqfRcqTwoduFqQQQiFjoc"><b data-page-node-id="Dlq7qDaysOqUMm3BGT0iAq">③ 把七个工具挂成 MCP server</b>　参数表和返回格式都不用改，只是换个暴露方式。</p>
+    </div>
+  </div>
+
+  <div style="margin-top:18px;display:flex;gap:6px;flex-wrap:wrap" data-page-node-id="kfo9ULoMzE75j56e5GH1fY">
+    <span class="pill" data-page-node-id="gc6JTW8pMhaQukcgDOvH3p">① 路径</span><span class="pill" data-page-node-id="dFTkWFR6hULJtmBWLrY5l1">② 循环</span>
+    <span class="pill teal" data-page-node-id="EvpdyAHJ9kAvd4TwWToC6M">③ 上下文</span><span class="pill teal" data-page-node-id="wRARzgX8GB0RXG3LQ9cAFq">④ 接口</span>
+    <span class="pill warn" data-page-node-id="0Uyj6Jix21fSeDfKexZpSA">⑤ 一致性</span><span class="pill warn" data-page-node-id="IivKzrDkaxIXCPu3bMrOmG">⑥ 校验</span>
+    <span class="pill warn" data-page-node-id="ORvJyndHP4M5QAT89aK1Kw">⑦ 容错</span><span class="pill warn" data-page-node-id="Vhp1MG8RX6BcgiGqitZVa7">⑧ 算法</span>
+    <span class="pill warn" data-page-node-id="lgt9qKMPU7lwurbYFRNwwi">⑨ 记忆</span><span class="pill ok" data-page-node-id="WFhcFr5peGS9wcisn2RB0S">⑩ 可见性</span>
+  </div>
+
+  <div class="takeaway" style="margin-top:16px;font-size:15px" data-page-node-id="WalC8HJhxdA8zEmtg8dTZH">
+    <b data-page-node-id="6Xjvm3ckSpv9uvEhQC5anI">收尾那句</b>：这十段里没有一段是「让模型更聪明」。它们都在做同一件事——
+    <b data-page-node-id="ClAjjlWV8N221FZFA6S5Tq">把不该由模型决定的事，从模型手里拿走</b>：路径、等级、列名、次数、循环边界。
+  </div>
+</div>
+
+</div>
+
+<div id="hint" data-page-node-id="WDqPfKdrlH3mIKGd9R7ERt">← → 翻页 · F 全屏 · 共 13 页</div>
+<div id="nav" data-page-node-id="KJEG8uu4p4pMPZrrfsU8n8">
+  <button id="prev" type="button" aria-label="上一页" data-page-node-id="pbHIiXFnRfb2yDKs2AiXtj">‹</button>
+  <button id="next" type="button" aria-label="下一页" data-page-node-id="7m9W0GzxZEaKaAE1TqV6oA">›</button>
+</div>
+
+<script>
+(function () {
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var i = 0;
+  var stage = document.getElementById('stage');
+
+  function fit() {
+    var w = window.innerWidth || document.documentElement.clientWidth || 1280;
+    var h = window.innerHeight || document.documentElement.clientHeight || 720;
+    var s = Math.min(w / 1280, h / 720);
+    if (!isFinite(s) || s < 0.08) { s = 1; }
+    slides.forEach(function (el) { el.style.transform = 'scale(' + s + ')'; });
+  }
+  function show(n) {
+    i = Math.max(0, Math.min(slides.length - 1, n));
+    slides.forEach(function (el, k) { el.classList.toggle('active', k === i); });
+    try {
+      if (location.hash !== '#' + (i + 1)) {
+        history.replaceState(null, '', '#' + (i + 1));
+      }
+    } catch (e) {}
+  }
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') {
+      e.preventDefault(); show(i + 1);
+    } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+      e.preventDefault(); show(i - 1);
+    } else if (e.key === 'Home') { show(0); }
+    else if (e.key === 'End') { show(slides.length - 1); }
+    else if (e.key === 'f' || e.key === 'F') {
+      if (document.fullscreenElement) { document.exitFullscreen(); }
+      else if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen();
+      }
+    }
+  });
+  var lock = false;
+  window.addEventListener('wheel', function (e) {
+    if (lock || Math.abs(e.deltaY) < 24) { return; }
+    lock = true;
+    show(i + (e.deltaY > 0 ? 1 : -1));
+    setTimeout(function () { lock = false; }, 420);
+  }, { passive: true });
+
+  var start = parseInt((location.hash || '').replace('#', ''), 10);
+  var btnPrev = document.getElementById('prev');
+  var btnNext = document.getElementById('next');
+  if (btnPrev) { btnPrev.addEventListener('click', function () { show(i - 1); }); }
+  if (btnNext) { btnNext.addEventListener('click', function () { show(i + 1); }); }
+  window.addEventListener('resize', fit);
+  window.addEventListener('load', fit);
+  fit();
+  show(isNaN(start) ? 0 : start - 1);
+  stage.classList.add('ready');
+  [40, 200, 600, 1200].forEach(function (t) { setTimeout(fit, t); });
+})();
+</script>
+</body>
+</html>
