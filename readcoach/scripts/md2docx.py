@@ -215,12 +215,52 @@ def _rows_keep_together(table):
                     p.paragraph_format.keep_with_next = True
 
 
+def _col_widths(header, body, total_cm):
+    """按各列内容的平均长度分配列宽。
+
+    为什么不用 Word 的 autofit：演示那张表四列字数差别很大，
+    「嘴上说什么」那一列最长，autofit 会把它压成窄条、每行折成七八行。
+    这里按平均字数加权，再给最长的列保底宽度，念稿时一眼能扫到。
+    """
+    n = len(header)
+    if n == 0:
+        return []
+    weights = []
+    for i in range(n):
+        lens = [len(re.sub(r"[*`]", "", r[i])) for r in body if i < len(r)]
+        avg = sum(lens) / len(lens) if lens else len(header[i])
+        weights.append(max(avg, 4))
+    # 开方压缩极端差距，避免某列独吞整行
+    weights = [w ** 0.5 for w in weights]
+    total_w = sum(weights)
+    widths = [total_cm * w / total_w for w in weights]
+    # 任何一列不低于 1.6cm，其余按比例补给最长的列
+    min_w = 1.6
+    for _ in range(3):
+        deficit = sum(min_w - w for w in widths if w < min_w)
+        if deficit <= 0:
+            break
+        for i, w in enumerate(widths):
+            if w < min_w:
+                widths[i] = min_w
+        longest = widths.index(max(widths))
+        widths[longest] -= deficit
+    return widths
+
+
 def _table(doc, rows):
     header, body = rows[0], rows[1:]
     table = doc.add_table(rows=1, cols=len(header))
     table.style = "Table Grid"
     table.alignment = WD_TABLE_ALIGNMENT.CENTER
-    table.autofit = True
+    table.autofit = False
+
+    # 页面可用宽度：21cm - 左右各 2.2cm 边距
+    widths = _col_widths(header, body, 16.6)
+    if widths:
+        for i, w in enumerate(widths):
+            for cell in table.columns[i].cells:
+                cell.width = Cm(w)
 
     for i, cell_text in enumerate(header):
         cell = table.rows[0].cells[i]
@@ -240,6 +280,13 @@ def _table(doc, rows):
             p.paragraph_format.space_after = Pt(3)
             p.paragraph_format.line_spacing = 1.3
             _add_inline(p, cell_text, size=10)
+
+    # add_row 新建的单元格不继承列宽，必须再按行设一次
+    if widths:
+        for row in table.rows:
+            for i, w in enumerate(widths):
+                if i < len(row.cells):
+                    row.cells[i].width = Cm(w)
 
     _rows_keep_together(table)
 
