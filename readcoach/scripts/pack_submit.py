@@ -46,11 +46,12 @@ def main() -> None:
     # 01 答辩材料：打开就能看的东西放最前面
     material = [
         (ROOT / "答辩幻灯片.pptx", "答辩幻灯片.pptx"),
-        (ROOT / "_deckpp.pdf", "答辩幻灯片.pdf"),
+        (ROOT / "答辩幻灯片.pdf", "答辩幻灯片.pdf"),
         (ROOT / "答辩幻灯片.html", "答辩幻灯片.html"),
         (ROOT / "代码解读.pptx", "代码解读.pptx"),
         (ROOT / "代码解读.pdf", "代码解读.pdf"),
         (ROOT / "代码解读.html", "代码解读.html"),
+        (ROOT / "代码解读.docx", "代码解读.docx"),
         (ROOT / "docs" / "发言稿-答辩.docx", "发言稿-答辩.docx"),
         (ROOT / "docs" / "发言稿-录屏.docx", "发言稿-录屏.docx"),
         (ROOT / "docs" / "preview-word-note.png", "Word笔记版式预览.png"),

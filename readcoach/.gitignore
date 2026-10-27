@@ -33,6 +33,8 @@ scripts/cache/
 /_*.json
 /_*.pdf
 /_*.txt
+/_*.py
+/_pptrender/
 
 # 每日推送抓取缓存（可重新抓，快照见 data/articles）
 data/cache/
